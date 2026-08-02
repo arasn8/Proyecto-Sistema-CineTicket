@@ -1,0 +1,10 @@
+@model Sala
+@{
+    ViewData["Title"] = "Eliminar Sala";
+}
+<h2>¿Eliminar la sala "@Model.Nombre"?</h2>
+<form asp-action="Delete" asp-route-id="@Model.IdSala" method="post" class="mt-3">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

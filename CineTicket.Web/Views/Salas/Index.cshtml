@@ -1,0 +1,25 @@
+@model List<Sala>
+@{
+    ViewData["Title"] = "Salas";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Salas</h2>
+    <a asp-action="Create" class="btn btn-primary">+ Nueva sala</a>
+</div>
+<table class="table table-striped">
+    <thead><tr><th>Nombre</th><th>Capacidad</th><th>Tipo</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var s in Model)
+    {
+        <tr>
+            <td>@s.Nombre</td>
+            <td>@s.Capacidad</td>
+            <td>@s.Tipo</td>
+            <td class="text-end">
+                <a asp-action="Edit" asp-route-id="@s.IdSala" class="btn btn-sm btn-outline-secondary">Editar</a>
+                <a asp-action="Delete" asp-route-id="@s.IdSala" class="btn btn-sm btn-outline-danger">Eliminar</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

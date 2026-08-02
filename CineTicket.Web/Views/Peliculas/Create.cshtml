@@ -1,0 +1,40 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model Pelicula
+@{
+    ViewData["Title"] = "Nueva Película";
+}
+<h2>Nueva película</h2>
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="mb-3">
+        <label class="form-label">Título</label>
+        <input asp-for="Titulo" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Sinopsis</label>
+        <textarea asp-for="Sinopsis" class="form-control" rows="3"></textarea>
+    </div>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Duración (min)</label>
+            <input asp-for="DuracionMin" type="number" class="form-control" required />
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Clasificación</label>
+            <input asp-for="Clasificacion" class="form-control" placeholder="Ej: PG-13" required />
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Género</label>
+            <select asp-for="IdGenero" class="form-select" asp-items="@(new SelectList(ViewBag.Generos, "IdGenero", "Nombre"))" required>
+                <option value="">-- Seleccione --</option>
+            </select>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">URL de imagen (poster)</label>
+        <input asp-for="ImagenUrl" class="form-control" placeholder="https://..." />
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

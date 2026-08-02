@@ -1,0 +1,16 @@
+@model Genero
+@{
+    ViewData["Title"] = "Editar Género";
+}
+<h2>Editar género</h2>
+<form asp-action="Edit" asp-route-id="@Model.IdGenero" method="post" style="max-width:400px">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="IdGenero" />
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <input asp-for="Nombre" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>
