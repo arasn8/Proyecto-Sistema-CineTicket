@@ -1,0 +1,34 @@
+@model Pelicula
+@{
+    ViewData["Title"] = Model.Titulo;
+    var funciones = (List<Funcione>)ViewBag.Funciones;
+}
+<div class="row">
+    <div class="col-md-4">
+        @if (!string.IsNullOrEmpty(Model.ImagenUrl))
+        {
+            <img src="@Model.ImagenUrl" class="img-fluid rounded" />
+        }
+    </div>
+    <div class="col-md-8">
+        <h2>@Model.Titulo</h2>
+        <p class="text-muted">@Model.IdGeneroNavigation?.Nombre — @Model.DuracionMin min — @Model.Clasificacion</p>
+        <p>@Model.Sinopsis</p>
+
+        <h4 class="mt-4">Funciones disponibles</h4>
+        @if (!funciones.Any())
+        {
+            <p class="text-muted">No hay funciones programadas por el momento.</p>
+        }
+        <div class="list-group">
+        @foreach (var f in funciones)
+        {
+            <a asp-controller="Cartelera" asp-action="Asientos" asp-route-idFuncion="@f.IdFuncion"
+               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <span>@f.Fecha.ToString("dd/MM/yyyy") — @f.Hora.ToString("HH:mm") — Sala @f.IdSalaNavigation?.Nombre</span>
+                <span class="badge bg-primary rounded-pill">S/ @f.PrecioEntrada</span>
+            </a>
+        }
+        </div>
+    </div>
+</div>

@@ -23,8 +23,9 @@ public class AccountController : Controller
             return View();
         }
 
-        var claims = new List<Claim>
+       var claims = new List<Claim>
         {
+            new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
             new Claim(ClaimTypes.Name, usuario.Nombres),
             new Claim(ClaimTypes.Role, usuario.IdRol == 1 ? "Administrador" : "Cliente")
         };

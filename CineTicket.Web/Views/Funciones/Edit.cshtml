@@ -1,0 +1,35 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model Funcione
+@{
+    ViewData["Title"] = "Editar Función";
+}
+<h2>Editar función</h2>
+<form asp-action="Edit" asp-route-id="@Model.IdFuncion" method="post" style="max-width:500px">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="IdFuncion" />
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="mb-3">
+        <label class="form-label">Película</label>
+        <select asp-for="IdPelicula" class="form-select" asp-items="@(new SelectList(ViewBag.Peliculas, "IdPelicula", "Titulo"))" required></select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Sala</label>
+        <select asp-for="IdSala" class="form-select" asp-items="@(new SelectList(ViewBag.Salas, "IdSala", "Nombre"))" required></select>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Fecha</label>
+            <input asp-for="Fecha" type="date" class="form-control" required />
+        </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Hora</label>
+            <input asp-for="Hora" type="time" class="form-control" required />
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Precio de entrada (S/)</label>
+        <input asp-for="PrecioEntrada" type="number" step="0.01" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

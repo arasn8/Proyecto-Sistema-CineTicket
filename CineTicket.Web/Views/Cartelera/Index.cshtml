@@ -1,0 +1,35 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model List<Pelicula>
+@{
+    ViewData["Title"] = "Cartelera";
+}
+<h2 class="mb-4"> Cartelera</h2>
+
+<form method="get" class="row mb-4">
+    <div class="col-md-4">
+        <select name="idGenero" class="form-select" onchange="this.form.submit()" asp-items="@(new SelectList(ViewBag.Generos, "IdGenero", "Nombre", ViewBag.GeneroSeleccionado))">
+            <option value="">-- Todos los géneros --</option>
+        </select>
+    </div>
+</form>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+@foreach (var p in Model)
+{
+    <div class="col">
+        <div class="card h-100">
+            @if (!string.IsNullOrEmpty(p.ImagenUrl))
+            {
+                <img src="@p.ImagenUrl" class="card-img-top" style="height:300px;object-fit:cover" />
+            }
+            <div class="card-body">
+                <h5 class="card-title">@p.Titulo</h5>
+                <p class="card-text text-muted">@p.IdGeneroNavigation?.Nombre — @p.DuracionMin min — @p.Clasificacion</p>
+            </div>
+            <div class="card-footer">
+                <a asp-action="Detalle" asp-route-id="@p.IdPelicula" class="btn btn-primary w-100">Ver funciones</a>
+            </div>
+        </div>
+    </div>
+}
+</div>

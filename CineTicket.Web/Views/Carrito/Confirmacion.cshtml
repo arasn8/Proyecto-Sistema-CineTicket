@@ -1,0 +1,24 @@
+@model Venta
+@{
+    ViewData["Title"] = "Compra confirmada";
+}
+<div class="alert alert-success">
+    <h2>¡Compra confirmada! 🎉</h2>
+    <p>N° de venta: <strong>@Model.IdVenta</strong> — Total: <strong>S/ @Model.Total</strong></p>
+</div>
+
+<table class="table">
+    <thead><tr><th>Película</th><th>Asiento</th><th>Precio</th></tr></thead>
+    <tbody>
+    @foreach (var d in Model.DetalleVenta)
+    {
+        <tr>
+            <td>@d.IdFuncionNavigation.IdPeliculaNavigation.Titulo</td>
+            <td>@d.IdAsientoNavigation.Fila@d.IdAsientoNavigation.Numero</td>
+            <td>S/ @d.Precio</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<a asp-controller="Cartelera" asp-action="Index" class="btn btn-primary">Volver a la cartelera</a>

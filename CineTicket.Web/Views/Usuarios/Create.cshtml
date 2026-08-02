@@ -1,0 +1,32 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model Usuario
+@{
+    ViewData["Title"] = "Nuevo Usuario";
+}
+<h2>Nuevo usuario</h2>
+<form asp-action="Create" method="post" style="max-width:500px">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="mb-3">
+        <label class="form-label">Nombres</label>
+        <input asp-for="Nombres" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Apellidos</label>
+        <input asp-for="Apellidos" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Correo</label>
+        <input asp-for="Correo" type="email" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Contraseña</label>
+        <input asp-for="Clave" type="password" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Rol</label>
+        <select asp-for="IdRol" class="form-select" asp-items="@(new SelectList(ViewBag.Roles, "IdRol", "NombreRol"))" required></select>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

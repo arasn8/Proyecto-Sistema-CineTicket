@@ -1,0 +1,37 @@
+@model List<CarritoItem>
+@{
+    ViewData["Title"] = "Mi Carrito";
+}
+<h2 class="mb-4">🛒 Mi carrito</h2>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Tu carrito está vacío.</p>
+    <a asp-controller="Cartelera" asp-action="Index" class="btn btn-primary">Ver cartelera</a>
+}
+else
+{
+    <table class="table">
+        <thead><tr><th>Película</th><th>Función</th><th>Asiento</th><th>Precio</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.PeliculaTitulo</td>
+                <td>@item.Fecha.ToString("dd/MM/yyyy") @item.Hora.ToString("HH:mm") — @item.SalaNombre</td>
+                <td>@item.AsientoNombre</td>
+                <td>S/ @item.Precio</td>
+                <td>
+                    <a asp-action="Eliminar" asp-route-idFuncion="@item.IdFuncion" asp-route-idAsiento="@item.IdAsiento" class="btn btn-sm btn-outline-danger">Quitar</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    <h4>Total: S/ @ViewBag.Total</h4>
+
+    <form asp-action="Confirmar" method="post">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-success">Confirmar compra</button>
+    </form>
+}
