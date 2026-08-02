@@ -3,6 +3,7 @@ using CineTicket.Web.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CineTicket.Web.Controllers;
 public class AccountController : Controller
@@ -40,4 +41,35 @@ public class AccountController : Controller
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction("Login");
     }
+    [HttpGet]
+    public IActionResult Register() => View();
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(string nombres, string apellidos, string correo, string clave)
+    {
+        if (await _db.Usuarios.AnyAsync(u => u.Correo == correo))
+        {
+            ViewBag.Error = "Ese correo ya está registrado.";
+            return View();
+        }
+
+        var nuevoUsuario = new Usuario
+        {
+            Nombres = nombres,
+            Apellidos = apellidos,
+            Correo = correo,
+            Clave = clave,
+            IdRol = 2, // 2 = Cliente 
+            Estado = true
+        };
+
+        _db.Usuarios.Add(nuevoUsuario);
+        await _db.SaveChangesAsync();
+
+        TempData["Ok"] = "Cuenta creada. Ahora puedes iniciar sesión.";
+        return RedirectToAction(nameof(Login));
+    }
+
+        public IActionResult AccessDenied() => View();
 }
