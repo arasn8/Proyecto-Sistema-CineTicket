@@ -2,23 +2,25 @@
 @{
     ViewData["Title"] = "Compra confirmada";
 }
-<div class="alert alert-success">
-    <h2>¡Compra confirmada! 🎉</h2>
-    <p>N° de venta: <strong>@Model.IdVenta</strong> — Total: <strong>S/ @Model.Total</strong></p>
+<div class="text-center mb-4">
+    <div class="badge-genre mb-2" style="font-size:0.9rem;">COMPRA CONFIRMADA</div>
+    <h1 class="display-font" style="font-size:2.6rem;">¡Disfruta tu función!</h1>
+    <p class="poster-meta">N° DE VENTA @Model.IdVenta · TOTAL S/ @Model.Total</p>
 </div>
 
-<table class="table">
-    <thead><tr><th>Película</th><th>Asiento</th><th>Precio</th></tr></thead>
-    <tbody>
-    @foreach (var d in Model.DetalleVenta)
-    {
-        <tr>
-            <td>@d.IdFuncionNavigation.IdPeliculaNavigation.Titulo</td>
-            <td>@d.IdAsientoNavigation.Fila@d.IdAsientoNavigation.Numero</td>
-            <td>S/ @d.Precio</td>
-        </tr>
-    }
-    </tbody>
-</table>
+<div class="mt-4">
+@foreach (var d in Model.DetalleVenta)
+{
+    <div class="ticket">
+        <div class="ticket-main">
+            <div class="ticket-title">@d.IdFuncionNavigation.IdPeliculaNavigation.Titulo</div>
+            <div class="ticket-info">Asiento @d.IdAsientoNavigation.Fila@d.IdAsientoNavigation.Numero</div>
+        </div>
+        <div class="ticket-stub">S/ @d.Precio</div>
+    </div>
+}
+</div>
 
-<a asp-controller="Cartelera" asp-action="Index" class="btn btn-primary">Volver a la cartelera</a>
+<div class="text-center mt-4">
+    <a asp-controller="Cartelera" asp-action="Index" class="btn btn-primary">Volver a la cartelera</a>
+</div>

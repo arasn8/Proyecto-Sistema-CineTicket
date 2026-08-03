@@ -3,23 +3,32 @@
     ViewData["Title"] = "Selecciona tu asiento";
     var funcion = (Funcione)ViewBag.Funcion;
     var ocupados = (List<int>)ViewBag.Ocupados;
+    var filas = Model.Select(a => a.Fila).Distinct().OrderBy(f => f);
 }
-<h2>@funcion.IdPeliculaNavigation.Titulo</h2>
-<p class="text-muted">Sala @funcion.IdSalaNavigation.Nombre — @funcion.Fecha.ToString("dd/MM/yyyy") @funcion.Hora.ToString("HH:mm")</p>
+<h1 class="display-font" style="font-size:2.2rem;">@funcion.IdPeliculaNavigation.Titulo</h1>
+<p class="poster-meta mb-4">SALA @funcion.IdSalaNavigation.Nombre · @funcion.Fecha.ToString("dd/MM/yyyy") · @funcion.Hora.ToString("HH:mm")</p>
 
-<div class="d-flex flex-wrap gap-2 my-4">
-@foreach (var a in Model)
+<div class="screen-label">PANTALLA</div>
+<div class="screen-arc"></div>
+
+<div class="seat-grid mb-4">
+@foreach (var fila in filas)
 {
-    bool ocupado = ocupados.Contains(a.IdAsiento);
-    <form asp-controller="Carrito" asp-action="Agregar" method="post">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="idFuncion" value="@funcion.IdFuncion" />
-        <input type="hidden" name="idAsiento" value="@a.IdAsiento" />
-        <button type="submit" class="btn @(ocupado ? "btn-secondary disabled" : "btn-outline-primary")" style="width:50px" @(ocupado ? "disabled" : "")>
-            @a.Fila@a.Numero
-        </button>
-    </form>
+    <div class="d-flex gap-2">
+    @foreach (var a in Model.Where(x => x.Fila == fila).OrderBy(x => x.Numero))
+    {
+        bool ocupado = ocupados.Contains(a.IdAsiento);
+        <form asp-controller="Carrito" asp-action="Agregar" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="idFuncion" value="@funcion.IdFuncion" />
+            <input type="hidden" name="idAsiento" value="@a.IdAsiento" />
+            <button type="submit" class="seat-btn" @(ocupado ? "disabled" : "")>@a.Fila@a.Numero</button>
+        </form>
+    }
+    </div>
 }
 </div>
 
-<a asp-controller="Carrito" asp-action="Index" class="btn btn-success">Ver mi carrito</a>
+<div class="text-center">
+    <a asp-controller="Carrito" asp-action="Index" class="btn btn-success px-4">Ver mi carrito</a>
+</div>

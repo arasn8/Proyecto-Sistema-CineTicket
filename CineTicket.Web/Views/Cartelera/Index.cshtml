@@ -3,28 +3,36 @@
 @{
     ViewData["Title"] = "Cartelera";
 }
-<h2 class="mb-4"> Cartelera</h2>
+<div class="mb-4">
+    <h1 class="display-font" style="font-size:3rem;">En cartelera</h1>
+    <p class="text-muted">Elige tu película y reserva tu asiento</p>
+</div>
 
-<form method="get" class="row mb-4">
-    <div class="col-md-4">
-        <select name="idGenero" class="form-select" onchange="this.form.submit()" asp-items="@(new SelectList(ViewBag.Generos, "IdGenero", "Nombre", ViewBag.GeneroSeleccionado))">
-            <option value="">-- Todos los géneros --</option>
-        </select>
-    </div>
+<form method="get" class="genre-filter mb-4">
+    <select name="idGenero" class="form-select" onchange="this.form.submit()" asp-items="@(new SelectList(ViewBag.Generos, "IdGenero", "Nombre", ViewBag.GeneroSeleccionado))">
+        <option value="">Todos los géneros</option>
+    </select>
 </form>
 
 <div class="row row-cols-1 row-cols-md-3 g-4">
 @foreach (var p in Model)
 {
     <div class="col">
-        <div class="card h-100">
+        <div class="poster-card card h-100">
             @if (!string.IsNullOrEmpty(p.ImagenUrl))
             {
-                <img src="@p.ImagenUrl" class="card-img-top" style="height:300px;object-fit:cover" />
+                <img src="@p.ImagenUrl" class="card-img-top" style="height:320px;object-fit:cover" />
+            }
+            else
+            {
+                <div style="height:320px;background:var(--bg-curtain);display:flex;align-items:center;justify-content:center;">
+                    <span class="display-font" style="color:var(--line);font-size:2rem;">CineTicket</span>
+                </div>
             }
             <div class="card-body">
-                <h5 class="card-title">@p.Titulo</h5>
-                <p class="card-text text-muted">@p.IdGeneroNavigation?.Nombre — @p.DuracionMin min — @p.Clasificacion</p>
+                <h5 class="card-title mb-1">@p.Titulo</h5>
+                <span class="badge-genre">@p.IdGeneroNavigation?.Nombre</span>
+                <div class="poster-meta mt-2">@p.DuracionMin MIN · @p.Clasificacion</div>
             </div>
             <div class="card-footer">
                 <a asp-action="Detalle" asp-route-id="@p.IdPelicula" class="btn btn-primary w-100">Ver funciones</a>
