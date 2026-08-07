@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using BCrypt.Net;
 
 namespace CineTicket.Web.Controllers;
 public class AccountController : Controller
@@ -15,26 +16,31 @@ public class AccountController : Controller
     public IActionResult Login() => View();
 
     [HttpPost]
-    public async Task<IActionResult> Login(string correo, string clave)
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Login(string correo, string clave)
+{
+    var usuario = await _db.Usuarios
+        .Include(u => u.IdRolNavigation)
+        .FirstOrDefaultAsync(u => u.Correo == correo && u.Estado);
+
+    if (usuario == null || !BCrypt.Net.BCrypt.Verify(clave, usuario.Clave))
     {
-        var usuario = _db.Usuarios.FirstOrDefault(u => u.Correo == correo && u.Clave == clave && u.Estado);
-        if (usuario == null)
-        {
-            ViewBag.Error = "Credenciales incorrectas";
-            return View();
-        }
-
-       var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
-            new Claim(ClaimTypes.Name, usuario.Nombres),
-            new Claim(ClaimTypes.Role, usuario.IdRol == 1 ? "Administrador" : "Cliente")
-        };
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
-
-        return RedirectToAction("Index", "Home");
+        ViewBag.Error = "Correo o contraseña incorrectos.";
+        return View();
     }
+
+    var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
+        new Claim(ClaimTypes.Name, usuario.Nombres),
+        new Claim(ClaimTypes.Role, usuario.IdRol == 1 ? "Administrador" : "Cliente")
+    };
+
+    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+
+    return RedirectToAction("Index", "Home");
+}
 
     public async Task<IActionResult> Logout()
     {
@@ -59,7 +65,7 @@ public class AccountController : Controller
             Nombres = nombres,
             Apellidos = apellidos,
             Correo = correo,
-            Clave = clave,
+           Clave = BCrypt.Net.BCrypt.HashPassword(clave),
             IdRol = 2, // 2 = Cliente 
             Estado = true
         };

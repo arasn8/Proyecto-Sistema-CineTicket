@@ -32,6 +32,7 @@ public class UsuariosController : Controller
             return View(model);
         }
 
+        model.Clave = BCrypt.Net.BCrypt.HashPassword(model.Clave);
         _db.Usuarios.Add(model);
         await _db.SaveChangesAsync();
 

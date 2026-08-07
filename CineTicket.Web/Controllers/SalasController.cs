@@ -27,7 +27,15 @@ public class SalasController : Controller
         await _db.Database.ExecuteSqlInterpolatedAsync($@"
             EXEC sp_Salas_Insertar @Nombre={model.Nombre}, @Capacidad={model.Capacidad}, @Tipo={model.Tipo}");
 
-        TempData["Ok"] = "Sala registrada.";
+        // Recuperamos el Id que acaba de generar el procedimiento almacenado
+        var salaCreada = await _db.Salas
+            .Where(s => s.Nombre == model.Nombre)
+            .OrderByDescending(s => s.IdSala)
+            .FirstAsync();
+
+        await GenerarAsientosAsync(salaCreada.IdSala, model.Capacidad);
+
+        TempData["Ok"] = $"Sala registrada con {model.Capacidad} asientos generados automáticamente.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -47,11 +55,40 @@ public class SalasController : Controller
         ModelState.Remove("Funciones");
         if (!ModelState.IsValid) return View(model);
 
+        var salaActual = await _db.Salas.AsNoTracking().FirstOrDefaultAsync(s => s.IdSala == id);
+        bool cambioCapacidad = salaActual != null && salaActual.Capacidad != model.Capacidad;
+
+        if (cambioCapacidad)
+        {
+            bool tieneVentas = await _db.DetalleVenta
+                .Include(d => d.IdAsientoNavigation)
+                .AnyAsync(d => d.IdAsientoNavigation.IdSala == id);
+
+            if (tieneVentas)
+            {
+                ModelState.AddModelError("", "No se puede cambiar la capacidad: esta sala ya tiene entradas vendidas.");
+                return View(model);
+            }
+        }
+
         await _db.Database.ExecuteSqlInterpolatedAsync($@"
             EXEC sp_Salas_Actualizar @IdSala={model.IdSala}, @Nombre={model.Nombre},
                 @Capacidad={model.Capacidad}, @Tipo={model.Tipo}");
 
-        TempData["Ok"] = "Sala actualizada.";
+        if (cambioCapacidad)
+        {
+            var asientosViejos = await _db.Asientos.Where(a => a.IdSala == id).ToListAsync();
+            _db.Asientos.RemoveRange(asientosViejos);
+            await _db.SaveChangesAsync();
+
+            await GenerarAsientosAsync(id, model.Capacidad);
+            TempData["Ok"] = $"Sala actualizada y asientos regenerados ({model.Capacidad} asientos).";
+        }
+        else
+        {
+            TempData["Ok"] = "Sala actualizada.";
+        }
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -69,5 +106,29 @@ public class SalasController : Controller
         await _db.Database.ExecuteSqlInterpolatedAsync($"EXEC sp_Salas_Eliminar @IdSala={id}");
         TempData["Ok"] = "Sala eliminada.";
         return RedirectToAction(nameof(Index));
+    }
+
+    // Genera asientos en filas de 10 (A1..A10, B1..B10, ...) hasta completar la capacidad
+    private async Task GenerarAsientosAsync(int idSala, int capacidad)
+    {
+        const int asientosPorFila = 10;
+        int totalFilas = (int)Math.Ceiling(capacidad / (double)asientosPorFila);
+        int contados = 0;
+        var nuevosAsientos = new List<Asiento>();
+
+        for (int f = 0; f < totalFilas; f++)
+        {
+            char letraFila = (char)('A' + f);
+            int enEstaFila = Math.Min(asientosPorFila, capacidad - contados);
+
+            for (int n = 1; n <= enEstaFila; n++)
+            {
+                nuevosAsientos.Add(new Asiento { IdSala = idSala, Fila = letraFila.ToString(), Numero = n });
+            }
+            contados += enEstaFila;
+        }
+
+        _db.Asientos.AddRange(nuevosAsientos);
+        await _db.SaveChangesAsync();
     }
 }
