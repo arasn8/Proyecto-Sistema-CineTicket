@@ -11,11 +11,26 @@
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body>
+    <form id="antiForgeryForm" style="display:none">@Html.AntiForgeryToken()</form>
+    <div id="toastContainer"></div>
+
+    <div class="modal fade" id="modalConfirmar" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content cine-modal">
+                <div class="modal-body text-center py-4">
+                    <p class="mb-4" id="modalConfirmarTexto" style="font-size:1.05rem;"></p>
+                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="modalConfirmarBtn">Sí, eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark navbar-cine">
             <div class="container">
                 <a class="navbar-brand d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
-                 <img src="~/img/Designer.png" alt="CineTicket" style="height:160px;width:auto;" />
+                 <img src="~/img/Logo1.png" alt="CineTicket" style="height:90px;width:auto;" />
                     <span>CineTicket</span>
                     </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
@@ -28,6 +43,7 @@
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item"><a class="nav-link" asp-controller="Carrito" asp-action="Index">🛒 Mi carrito</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="MisCompras" asp-action="Index">🎟️ Mis boletos</a></li>
                         }
                         @if (User.IsInRole("Administrador"))
                         {
@@ -39,6 +55,7 @@
                                     <li><a class="dropdown-item" asp-controller="Salas" asp-action="Index">Salas</a></li>
                                     <li><a class="dropdown-item" asp-controller="Funciones" asp-action="Index">Funciones</a></li>
                                     <li><a class="dropdown-item" asp-controller="Usuarios" asp-action="Index">Usuarios</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Reportes" asp-action="Ventas">Reportes</a></li>
                                 </ul>
                             </li>
                         }
@@ -77,6 +94,8 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>

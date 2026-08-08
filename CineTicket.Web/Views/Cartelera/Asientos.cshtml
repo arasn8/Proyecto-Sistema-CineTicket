@@ -11,24 +11,48 @@
 <div class="screen-label">PANTALLA</div>
 <div class="screen-arc"></div>
 
-<div class="seat-grid mb-4">
+<div class="seat-grid mb-3">
 @foreach (var fila in filas)
 {
     <div class="d-flex gap-2">
     @foreach (var a in Model.Where(x => x.Fila == fila).OrderBy(x => x.Numero))
     {
         bool ocupado = ocupados.Contains(a.IdAsiento);
-        <form asp-controller="Carrito" asp-action="Agregar" method="post">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="idFuncion" value="@funcion.IdFuncion" />
-            <input type="hidden" name="idAsiento" value="@a.IdAsiento" />
-            <button type="submit" class="seat-btn" @(ocupado ? "disabled" : "")>@a.Fila@a.Numero</button>
-        </form>
+        <button type="button" class="seat-btn" id="asiento-@a.IdAsiento"
+                onclick="agregarAsiento(@funcion.IdFuncion, @a.IdAsiento, this)"
+                @(ocupado ? "disabled" : "")>@a.Fila@a.Numero</button>
     }
     </div>
 }
 </div>
 
+<p id="carritoContador" class="text-center poster-meta mb-4"></p>
+
 <div class="text-center">
     <a asp-controller="Carrito" asp-action="Index" class="btn btn-success px-4">Ver mi carrito</a>
 </div>
+
+@section Scripts {
+<script>
+    async function agregarAsiento(idFuncion, idAsiento, btn) {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        const body = new URLSearchParams({ idFuncion, idAsiento });
+
+        const res = await fetch('@Url.Action("AgregarAjax", "Carrito")', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': token },
+            body
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            btn.disabled = true;
+            btn.classList.add('seat-added');
+            mostrarToast(data.mensaje, 'success');
+            document.getElementById('carritoContador').textContent = `${data.totalCarrito} asiento(s) en tu carrito`;
+        } else {
+            mostrarToast(data.mensaje, 'danger');
+        }
+    }
+</script>
+}

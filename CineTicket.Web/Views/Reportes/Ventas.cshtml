@@ -1,0 +1,67 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model List<DetalleVentum>
+@{
+    ViewData["Title"] = "Reporte de Ventas";
+    int paginaActual = ViewBag.PaginaActual;
+    int totalPaginas = ViewBag.TotalPaginas;
+}
+<h1 class="display-font" style="font-size:2.2rem;">Reporte de Ventas</h1>
+
+<form method="get" class="row g-2 align-items-end mb-4">
+    <div class="col-md-3">
+        <label class="form-label">Desde</label>
+        <input type="date" name="desde" value="@ViewBag.Desde" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Hasta</label>
+        <input type="date" name="hasta" value="@ViewBag.Hasta" class="form-control" />
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Película</label>
+        <select name="idPelicula" class="form-select" asp-items="@(new SelectList(ViewBag.Peliculas, "IdPelicula", "Titulo", (int?)ViewBag.IdPelicula))">
+            <option value="">Todas</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+    </div>
+</form>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="poster-meta">@ViewBag.TotalRegistros resultado(s)</span>
+    <span class="ticket-price">Total recaudado: S/ @ViewBag.TotalRecaudado</span>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr><th>N° Venta</th><th>Fecha</th><th>Cliente</th><th>Película</th><th>Asiento</th><th>Precio</th></tr>
+    </thead>
+    <tbody>
+    @foreach (var d in Model)
+    {
+        <tr>
+            <td>@d.IdVenta</td>
+            <td>@d.IdVentaNavigation.FechaVenta.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>@d.IdVentaNavigation.IdUsuarioNavigation.Nombres @d.IdVentaNavigation.IdUsuarioNavigation.Apellidos</td>
+            <td>@d.IdFuncionNavigation.IdPeliculaNavigation.Titulo</td>
+            <td>@d.IdAsientoNavigation.Fila@d.IdAsientoNavigation.Numero</td>
+            <td>S/ @d.Precio</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@if (totalPaginas > 1)
+{
+    <nav>
+        <ul class="pagination">
+        @for (int i = 1; i <= totalPaginas; i++)
+        {
+            <li class="page-item @(i == paginaActual ? "active" : "")">
+                <a class="page-link" asp-action="Ventas" asp-route-page="@i"
+                   asp-route-desde="@ViewBag.Desde" asp-route-hasta="@ViewBag.Hasta" asp-route-idPelicula="@ViewBag.IdPelicula">@i</a>
+            </li>
+        }
+        </ul>
+    </nav>
+}

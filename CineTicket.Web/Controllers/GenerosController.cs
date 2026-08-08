@@ -67,4 +67,13 @@ public class GenerosController : Controller
         TempData["Ok"] = "Género eliminado.";
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EliminarAjax(int id)
+    {
+    await _db.Database.ExecuteSqlInterpolatedAsync($"EXEC sp_Generos_Eliminar @IdGenero={id}");
+    return Json(new { success = true, mensaje = "Género eliminado." });
+    }
+
 }

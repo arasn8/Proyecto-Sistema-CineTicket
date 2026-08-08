@@ -14,7 +14,7 @@
     <tbody>
     @foreach (var p in Model)
     {
-        <tr>
+        <tr id="fila-pelicula-@p.IdPelicula">
             <td>@p.Titulo</td>
             <td>@p.IdGeneroNavigation?.Nombre</td>
             <td>@p.DuracionMin min</td>
@@ -22,7 +22,10 @@
             <td>@(p.Estado ? "Activa" : "Inactiva")</td>
             <td class="text-end">
                 <a asp-action="Edit" asp-route-id="@p.IdPelicula" class="btn btn-sm btn-outline-secondary">Editar</a>
-                <a asp-action="Delete" asp-route-id="@p.IdPelicula" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                    onclick="eliminarRegistro('@Url.Action("EliminarAjax")/@p.IdPelicula', 'fila-pelicula-@p.IdPelicula', '¿Eliminar esta película?')">
+                Eliminar
+            </button>
             </td>
         </tr>
     }

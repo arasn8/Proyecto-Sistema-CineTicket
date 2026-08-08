@@ -90,4 +90,12 @@ public class PeliculasController : Controller
         TempData["Ok"] = "Película eliminada correctamente.";
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EliminarAjax(int id)
+    {
+    await _db.Database.ExecuteSqlInterpolatedAsync($"EXEC sp_Peliculas_Eliminar @IdPelicula={id}");
+    return Json(new { success = true, mensaje = "Película eliminada correctamente." });
+    }
 }

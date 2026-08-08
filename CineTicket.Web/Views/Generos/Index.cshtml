@@ -11,13 +11,17 @@
     <tbody>
     @foreach (var g in Model)
     {
-        <tr>
+        <tr id="fila-genero-@g.IdGenero">
             <td>@g.Nombre</td>
             <td class="text-end">
                 <a asp-action="Edit" asp-route-id="@g.IdGenero" class="btn btn-sm btn-outline-secondary">Editar</a>
-                <a asp-action="Delete" asp-route-id="@g.IdGenero" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                        onclick="eliminarRegistro('@Url.Action("EliminarAjax")/@g.IdGenero', 'fila-genero-@g.IdGenero', '¿Eliminar este género?')">
+                    Eliminar
+                </button>
             </td>
         </tr>
     }
     </tbody>
 </table>
+           

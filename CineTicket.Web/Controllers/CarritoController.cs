@@ -137,4 +137,47 @@ public class CarritoController : Controller
         if (venta == null) return NotFound();
         return View(venta);
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AgregarAjax(int idFuncion, int idAsiento)
+    {
+        var yaVendido = await _db.DetalleVenta.AnyAsync(d => d.IdFuncion == idFuncion && d.IdAsiento == idAsiento);
+        if (yaVendido) return Json(new { success = false, mensaje = "Ese asiento ya fue vendido." });
+
+        var carrito = HttpContext.Session.GetObject<List<CarritoItem>>(SESSION_KEY);
+        if (carrito.Any(c => c.IdFuncion == idFuncion && c.IdAsiento == idAsiento))
+            return Json(new { success = false, mensaje = "Ese asiento ya está en tu carrito." });
+
+        var funcion = await _db.Funciones.Include(f => f.IdPeliculaNavigation).Include(f => f.IdSalaNavigation)
+            .FirstOrDefaultAsync(f => f.IdFuncion == idFuncion);
+        var asiento = await _db.Asientos.FindAsync(idAsiento);
+        if (funcion == null || asiento == null) return Json(new { success = false, mensaje = "Datos no válidos." });
+
+        carrito.Add(new CarritoItem
+        {
+            IdFuncion = funcion.IdFuncion,
+            PeliculaTitulo = funcion.IdPeliculaNavigation.Titulo,
+            Fecha = funcion.Fecha,
+            Hora = funcion.Hora,
+            SalaNombre = funcion.IdSalaNavigation.Nombre,
+            IdAsiento = asiento.IdAsiento,
+            AsientoNombre = $"{asiento.Fila}{asiento.Numero}",
+            Precio = funcion.PrecioEntrada
+        });
+
+        HttpContext.Session.SetObject(SESSION_KEY, carrito);
+        return Json(new { success = true, mensaje = "Asiento agregado al carrito.", totalCarrito = carrito.Count });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult EliminarAjax(int idFuncion, int idAsiento)
+    {
+        var carrito = HttpContext.Session.GetObject<List<CarritoItem>>(SESSION_KEY);
+        carrito.RemoveAll(c => c.IdFuncion == idFuncion && c.IdAsiento == idAsiento);
+        HttpContext.Session.SetObject(SESSION_KEY, carrito);
+
+        return Json(new { success = true, total = carrito.Sum(c => c.Precio), cantidad = carrito.Count });
+    }
 }

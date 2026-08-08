@@ -131,4 +131,12 @@ public class SalasController : Controller
         _db.Asientos.AddRange(nuevosAsientos);
         await _db.SaveChangesAsync();
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EliminarAjax(int id)
+    {
+    await _db.Database.ExecuteSqlInterpolatedAsync($"EXEC sp_Salas_Eliminar @IdSala={id}");
+    return Json(new { success = true, mensaje = "Sala eliminada." });
+    }
 }

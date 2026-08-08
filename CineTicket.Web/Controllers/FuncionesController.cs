@@ -41,8 +41,9 @@ public class FuncionesController : Controller
 
         if (!ModelState.IsValid) { CargarListas(); return View(model); }
 
-        _db.Funciones.Add(model);
-        await _db.SaveChangesAsync();
+        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            EXEC sp_Funciones_Insertar @IdPelicula={model.IdPelicula}, @IdSala={model.IdSala},
+                @Fecha={model.Fecha.ToDateTime(TimeOnly.MinValue)}, @Hora={model.Hora.ToTimeSpan()}, @PrecioEntrada={model.PrecioEntrada}");
 
         TempData["Ok"] = "Función programada.";
         return RedirectToAction(nameof(Index));
@@ -66,34 +67,21 @@ public class FuncionesController : Controller
         ModelState.Remove("DetalleVenta");
         if (!ModelState.IsValid) { CargarListas(); return View(model); }
 
-        _db.Funciones.Update(model);
-        await _db.SaveChangesAsync();
+        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            EXEC sp_Funciones_Actualizar @IdFuncion={model.IdFuncion}, @IdPelicula={model.IdPelicula},
+                @IdSala={model.IdSala}, @Fecha={model.Fecha.ToDateTime(TimeOnly.MinValue)},
+                @Hora={model.Hora.ToTimeSpan()}, @PrecioEntrada={model.PrecioEntrada}");
 
         TempData["Ok"] = "Función actualizada.";
         return RedirectToAction(nameof(Index));
     }
 
-    public async Task<IActionResult> Delete(int id)
-    {
-        var funcion = await _db.Funciones
-            .Include(f => f.IdPeliculaNavigation).Include(f => f.IdSalaNavigation)
-            .FirstOrDefaultAsync(f => f.IdFuncion == id);
-        if (funcion == null) return NotFound();
-        return View(funcion);
-    }
-
-    [HttpPost, ActionName("Delete")]
+    [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id)
+    public async Task<IActionResult> EliminarAjax(int id)
     {
-        var funcion = await _db.Funciones.FindAsync(id);
-        if (funcion != null)
-        {
-            _db.Funciones.Remove(funcion);
-            await _db.SaveChangesAsync();
-        }
-        TempData["Ok"] = "Función eliminada.";
-        return RedirectToAction(nameof(Index));
+        await _db.Database.ExecuteSqlInterpolatedAsync($"EXEC sp_Funciones_Eliminar @IdFuncion={id}");
+        return Json(new { success = true, mensaje = "Función eliminada." });
     }
 
     private void CargarListas()

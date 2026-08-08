@@ -11,7 +11,7 @@
     <tbody>
     @foreach (var f in Model)
     {
-        <tr>
+        <tr id="fila-funcion-@f.IdFuncion">
             <td>@f.IdPeliculaNavigation?.Titulo</td>
             <td>@f.IdSalaNavigation?.Nombre</td>
             <td>@f.Fecha.ToString("dd/MM/yyyy")</td>
@@ -19,7 +19,10 @@
             <td>S/ @f.PrecioEntrada</td>
             <td class="text-end">
                 <a asp-action="Edit" asp-route-id="@f.IdFuncion" class="btn btn-sm btn-outline-secondary">Editar</a>
-                <a asp-action="Delete" asp-route-id="@f.IdFuncion" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                        onclick="eliminarRegistro('@Url.Action("EliminarAjax")/@f.IdFuncion', 'fila-funcion-@f.IdFuncion', '¿Eliminar esta función?')">
+                    Eliminar
+                </button>
             </td>
         </tr>
     }
