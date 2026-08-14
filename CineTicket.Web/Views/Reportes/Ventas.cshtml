@@ -8,19 +8,23 @@
 <h1 class="display-font" style="font-size:2.2rem;">Reporte de Ventas</h1>
 
 <form method="get" class="row g-2 align-items-end mb-4">
-    <div class="col-md-3">
+    <div class="col-md-2">
         <label class="form-label">Desde</label>
         <input type="date" name="desde" value="@ViewBag.Desde" class="form-control" />
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
         <label class="form-label">Hasta</label>
         <input type="date" name="hasta" value="@ViewBag.Hasta" class="form-control" />
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <label class="form-label">Película</label>
         <select name="idPelicula" class="form-select" asp-items="@(new SelectList(ViewBag.Peliculas, "IdPelicula", "Titulo", (int?)ViewBag.IdPelicula))">
             <option value="">Todas</option>
         </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Cliente</label>
+        <input type="text" name="cliente" value="@ViewBag.Cliente" class="form-control" placeholder="Nombre, apellido o correo" />
     </div>
     <div class="col-md-2">
         <button type="submit" class="btn btn-primary w-100">Filtrar</button>
@@ -59,7 +63,8 @@
         {
             <li class="page-item @(i == paginaActual ? "active" : "")">
                 <a class="page-link" asp-action="Ventas" asp-route-page="@i"
-                   asp-route-desde="@ViewBag.Desde" asp-route-hasta="@ViewBag.Hasta" asp-route-idPelicula="@ViewBag.IdPelicula">@i</a>
+                   asp-route-desde="@ViewBag.Desde" asp-route-hasta="@ViewBag.Hasta"
+                   asp-route-idPelicula="@ViewBag.IdPelicula" asp-route-cliente="@ViewBag.Cliente">@i</a>
             </li>
         }
         </ul>

@@ -48,34 +48,33 @@ public async Task<IActionResult> Login(string correo, string clave)
         return RedirectToAction("Login");
     }
     [HttpGet]
-    public IActionResult Register() => View();
+public IActionResult Register() => View(new RegisterViewModel());
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register(string nombres, string apellidos, string correo, string clave)
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Register(RegisterViewModel model)
+{
+    if (await _db.Usuarios.AnyAsync(u => u.Correo == model.Correo))
+        ModelState.AddModelError(nameof(model.Correo), "Ese correo ya está registrado.");
+
+    if (!ModelState.IsValid) return View(model);
+
+    var nuevoUsuario = new Usuario
     {
-        if (await _db.Usuarios.AnyAsync(u => u.Correo == correo))
-        {
-            ViewBag.Error = "Ese correo ya está registrado.";
-            return View();
-        }
+        Nombres = model.Nombres,
+        Apellidos = model.Apellidos,
+        Correo = model.Correo,
+        Clave = BCrypt.Net.BCrypt.HashPassword(model.Clave),
+        IdRol = 2,
+        Estado = true
+    };
 
-        var nuevoUsuario = new Usuario
-        {
-            Nombres = nombres,
-            Apellidos = apellidos,
-            Correo = correo,
-           Clave = BCrypt.Net.BCrypt.HashPassword(clave),
-            IdRol = 2, // 2 = Cliente 
-            Estado = true
-        };
+    _db.Usuarios.Add(nuevoUsuario);
+    await _db.SaveChangesAsync();
 
-        _db.Usuarios.Add(nuevoUsuario);
-        await _db.SaveChangesAsync();
-
-        TempData["Ok"] = "Cuenta creada. Ahora puedes iniciar sesión.";
-        return RedirectToAction(nameof(Login));
-    }
+    TempData["Ok"] = "Cuenta creada. Ahora puedes iniciar sesión.";
+    return RedirectToAction(nameof(Login));
+}
 
         public IActionResult AccessDenied() => View();
 }

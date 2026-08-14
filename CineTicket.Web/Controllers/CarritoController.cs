@@ -10,9 +10,40 @@ namespace CineTicket.Web.Controllers;
 public class CarritoController : Controller
 {
     private const string SESSION_KEY = "Carrito";
+    private const int MAX_ASIENTOS = 10;
     private readonly CineTicketContext _db;
     public CarritoController(CineTicketContext db) => _db = db;
 
+    // ---------- Ver / modificar el carrito ----------
+
+    public IActionResult Index()
+    {
+        var carrito = HttpContext.Session.GetObject<List<CarritoItem>>(SESSION_KEY);
+        ViewBag.Total = carrito.Sum(c => c.Precio);
+        return View(carrito);
+    }
+
+    public IActionResult Eliminar(int idFuncion, int idAsiento)
+    {
+        var carrito = HttpContext.Session.GetObject<List<CarritoItem>>(SESSION_KEY);
+        carrito.RemoveAll(c => c.IdFuncion == idFuncion && c.IdAsiento == idAsiento);
+        HttpContext.Session.SetObject(SESSION_KEY, carrito);
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public IActionResult EliminarAjax(int idFuncion, int idAsiento)
+    {
+        var carrito = HttpContext.Session.GetObject<List<CarritoItem>>(SESSION_KEY);
+        carrito.RemoveAll(c => c.IdFuncion == idFuncion && c.IdAsiento == idAsiento);
+        HttpContext.Session.SetObject(SESSION_KEY, carrito);
+
+        return Json(new { success = true, total = carrito.Sum(c => c.Precio), cantidad = carrito.Count });
+    }
+
+    // ---------- Agregar asientos al carrito ----------
+
+    
     [HttpPost]
     public async Task<IActionResult> Agregar(int idFuncion, int idAsiento)
     {
@@ -53,21 +84,51 @@ public class CarritoController : Controller
         return RedirectToAction("Asientos", "Cartelera", new { idFuncion });
     }
 
-    public IActionResult Index()
+    // Version AJAX (la que usa Cartelera/Asientos.cshtml), con validaciones extra
+    [HttpPost]
+    public async Task<IActionResult> AgregarAjax(int idFuncion, int idAsiento)
     {
-        var carrito = HttpContext.Session.GetObject<List<CarritoItem>>(SESSION_KEY);
-        ViewBag.Total = carrito.Sum(c => c.Precio);
-        return View(carrito);
-    }
+        var funcion = await _db.Funciones.Include(f => f.IdPeliculaNavigation).Include(f => f.IdSalaNavigation)
+            .FirstOrDefaultAsync(f => f.IdFuncion == idFuncion);
+        if (funcion == null) return Json(new { success = false, mensaje = "Función no válida." });
 
-    public IActionResult Eliminar(int idFuncion, int idAsiento)
-    {
+        var fechaHoraFuncion = funcion.Fecha.ToDateTime(funcion.Hora);
+        if (fechaHoraFuncion < DateTime.Now)
+            return Json(new { success = false, mensaje = "Esta función ya pasó, elige otra." });
+
+        var asiento = await _db.Asientos.FindAsync(idAsiento);
+        if (asiento == null || asiento.IdSala != funcion.IdSala)
+            return Json(new { success = false, mensaje = "Asiento no válido para esta función." });
+
+        var yaVendido = await _db.DetalleVenta.AnyAsync(d => d.IdFuncion == idFuncion && d.IdAsiento == idAsiento);
+        if (yaVendido) return Json(new { success = false, mensaje = "Ese asiento ya fue vendido." });
+
         var carrito = HttpContext.Session.GetObject<List<CarritoItem>>(SESSION_KEY);
-        carrito.RemoveAll(c => c.IdFuncion == idFuncion && c.IdAsiento == idAsiento);
+        if (carrito.Any(c => c.IdFuncion == idFuncion && c.IdAsiento == idAsiento))
+            return Json(new { success = false, mensaje = "Ese asiento ya está en tu carrito." });
+
+        if (carrito.Count >= MAX_ASIENTOS)
+            return Json(new { success = false, mensaje = $"Máximo {MAX_ASIENTOS} asientos por compra." });
+
+        carrito.Add(new CarritoItem
+        {
+            IdFuncion = funcion.IdFuncion,
+            PeliculaTitulo = funcion.IdPeliculaNavigation.Titulo,
+            Fecha = funcion.Fecha,
+            Hora = funcion.Hora,
+            SalaNombre = funcion.IdSalaNavigation.Nombre,
+            IdAsiento = asiento.IdAsiento,
+            AsientoNombre = $"{asiento.Fila}{asiento.Numero}",
+            Precio = funcion.PrecioEntrada
+        });
+
         HttpContext.Session.SetObject(SESSION_KEY, carrito);
-        return RedirectToAction(nameof(Index));
+        return Json(new { success = true, mensaje = "Asiento agregado al carrito.", totalCarrito = carrito.Count });
     }
 
+    // ---------- Confirmar compra (con estado Pendiente -Confirmada) ----------
+
+    // Paso 1: crea la venta en estado PENDIENTE y lleva a la pantalla de espera
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> Confirmar()
@@ -99,7 +160,7 @@ public class CarritoController : Controller
                 IdUsuario = idUsuario,
                 FechaVenta = DateTime.Now,
                 Total = carrito.Sum(c => c.Precio),
-                Estado = "CONFIRMADA"
+                Estado = "PENDIENTE"
             };
             _db.Ventas.Add(venta);
             await _db.SaveChangesAsync();
@@ -118,7 +179,7 @@ public class CarritoController : Controller
             await transaccion.CommitAsync();
 
             HttpContext.Session.Remove(SESSION_KEY);
-            return RedirectToAction(nameof(Confirmacion), new { id = venta.IdVenta });
+            return RedirectToAction(nameof(Espera), new { id = venta.IdVenta });
         }
         catch
         {
@@ -128,56 +189,70 @@ public class CarritoController : Controller
         }
     }
 
-    public async Task<IActionResult> Confirmacion(int id)
+    // Paso 2: pantalla de espera con el resumen, mientras se "confirma" el pago
+    [Authorize]
+    public async Task<IActionResult> Espera(int id)
     {
-        var venta = await _db.Ventas
-            .Include(v => v.DetalleVenta).ThenInclude(d => d.IdFuncionNavigation).ThenInclude(f => f.IdPeliculaNavigation)
-            .Include(v => v.DetalleVenta).ThenInclude(d => d.IdAsientoNavigation)
-            .FirstOrDefaultAsync(v => v.IdVenta == id);
+        var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var venta = await CargarVentaDelUsuario(id, idUsuario);
         if (venta == null) return NotFound();
+
+        if (venta.Estado == "CONFIRMADA") return RedirectToAction(nameof(Confirmacion), new { id });
         return View(venta);
     }
 
+    // Simula la confirmacion del pago 
+    [Authorize]
     [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AgregarAjax(int idFuncion, int idAsiento)
+    public async Task<IActionResult> ConfirmarPago(int id)
     {
-        var yaVendido = await _db.DetalleVenta.AnyAsync(d => d.IdFuncion == idFuncion && d.IdAsiento == idAsiento);
-        if (yaVendido) return Json(new { success = false, mensaje = "Ese asiento ya fue vendido." });
+        var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var venta = await _db.Ventas.FirstOrDefaultAsync(v => v.IdVenta == id && v.IdUsuario == idUsuario);
+        if (venta == null) return NotFound();
 
-        var carrito = HttpContext.Session.GetObject<List<CarritoItem>>(SESSION_KEY);
-        if (carrito.Any(c => c.IdFuncion == idFuncion && c.IdAsiento == idAsiento))
-            return Json(new { success = false, mensaje = "Ese asiento ya está en tu carrito." });
-
-        var funcion = await _db.Funciones.Include(f => f.IdPeliculaNavigation).Include(f => f.IdSalaNavigation)
-            .FirstOrDefaultAsync(f => f.IdFuncion == idFuncion);
-        var asiento = await _db.Asientos.FindAsync(idAsiento);
-        if (funcion == null || asiento == null) return Json(new { success = false, mensaje = "Datos no válidos." });
-
-        carrito.Add(new CarritoItem
+        if (venta.Estado == "PENDIENTE")
         {
-            IdFuncion = funcion.IdFuncion,
-            PeliculaTitulo = funcion.IdPeliculaNavigation.Titulo,
-            Fecha = funcion.Fecha,
-            Hora = funcion.Hora,
-            SalaNombre = funcion.IdSalaNavigation.Nombre,
-            IdAsiento = asiento.IdAsiento,
-            AsientoNombre = $"{asiento.Fila}{asiento.Numero}",
-            Precio = funcion.PrecioEntrada
-        });
-
-        HttpContext.Session.SetObject(SESSION_KEY, carrito);
-        return Json(new { success = true, mensaje = "Asiento agregado al carrito.", totalCarrito = carrito.Count });
+            venta.Estado = "CONFIRMADA";
+            await _db.SaveChangesAsync();
+        }
+        return RedirectToAction(nameof(Confirmacion), new { id });
     }
 
+    [Authorize]
     [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult EliminarAjax(int idFuncion, int idAsiento)
+    public async Task<IActionResult> CancelarPendiente(int id)
     {
-        var carrito = HttpContext.Session.GetObject<List<CarritoItem>>(SESSION_KEY);
-        carrito.RemoveAll(c => c.IdFuncion == idFuncion && c.IdAsiento == idAsiento);
-        HttpContext.Session.SetObject(SESSION_KEY, carrito);
+        var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var venta = await _db.Ventas.Include(v => v.DetalleVenta)
+            .FirstOrDefaultAsync(v => v.IdVenta == id && v.IdUsuario == idUsuario && v.Estado == "PENDIENTE");
+        if (venta == null) return NotFound();
 
-        return Json(new { success = true, total = carrito.Sum(c => c.Precio), cantidad = carrito.Count });
+        _db.DetalleVenta.RemoveRange(venta.DetalleVenta);
+        _db.Ventas.Remove(venta);
+        await _db.SaveChangesAsync();
+
+        TempData["Ok"] = "Compra cancelada.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [Authorize]
+    public async Task<IActionResult> Confirmacion(int id)
+    {
+        var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var venta = await CargarVentaDelUsuario(id, idUsuario);
+        if (venta == null) return NotFound();
+
+        if (venta.Estado != "CONFIRMADA") return RedirectToAction(nameof(Espera), new { id });
+        return View(venta);
+    }
+
+    private async Task<Venta?> CargarVentaDelUsuario(int id, int idUsuario)
+    {
+        return await _db.Ventas
+            .Where(v => v.IdVenta == id && v.IdUsuario == idUsuario)
+            .Include(v => v.DetalleVenta).ThenInclude(d => d.IdFuncionNavigation).ThenInclude(f => f.IdPeliculaNavigation)
+            .Include(v => v.DetalleVenta).ThenInclude(d => d.IdFuncionNavigation).ThenInclude(f => f.IdSalaNavigation)
+            .Include(v => v.DetalleVenta).ThenInclude(d => d.IdAsientoNavigation)
+            .FirstOrDefaultAsync();
     }
 }

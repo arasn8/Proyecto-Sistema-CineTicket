@@ -63,7 +63,42 @@ else
 {
     <p class="text-muted text-center">Aún no hay películas registradas.</p>
 }
+<div class="quick-booking-bar mb-5">
+    <div class="row g-2 align-items-center">
+        <div class="col-md-9">
+            <select id="quickBookingSelect" class="form-select">
+                <option value="">Elige una película para reservar...</option>
+                @foreach (var p in (List<Pelicula>)ViewBag.TodasPeliculas)
+                {
+                    <option value="@p.IdPelicula">@p.Titulo</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="button" class="btn btn-primary w-100" onclick="var s=document.getElementById('quickBookingSelect'); if(s.value) location.href='/Cartelera/Detalle/'+s.value;">
+                Buscar funciones
+            </button>
+        </div>
+    </div>
+</div>
 
+<h2 class="display-font mb-3" style="font-size:1.8rem;border:none;">Top películas</h2>
+<div class="film-strip mb-5">
+@foreach (var p in (List<Pelicula>)ViewBag.TopPeliculas)
+{
+    <a asp-controller="Cartelera" asp-action="Detalle" asp-route-id="@p.IdPelicula" class="film-strip-item">
+        @if (!string.IsNullOrEmpty(p.ImagenUrl))
+        {
+            <img src="@p.ImagenUrl" />
+        }
+        else
+        {
+            <div class="film-strip-placeholder">CineTicket</div>
+        }
+        <div class="film-strip-title">@p.Titulo</div>
+    </a>
+}
+</div>
 <div class="text-center">
     <a asp-controller="Cartelera" asp-action="Index" class="btn btn-outline-primary px-4">Ver toda la cartelera</a>
 </div>

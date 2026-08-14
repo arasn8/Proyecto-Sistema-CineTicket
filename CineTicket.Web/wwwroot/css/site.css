@@ -485,3 +485,31 @@ footer {
   color: var(--text-main);
 }
 .modal-backdrop.show { opacity: 0.75; background-color: var(--bg-void); }
+/* ---------- Barra de reserva rapida (Home) ---------- */
+.quick-booking-bar {
+  background: linear-gradient(90deg, var(--bg-curtain), var(--bg-panel));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+}
+
+/* ---------- Fila horizontal "Top peliculas" ---------- */
+.film-strip {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.6rem;
+  scroll-snap-type: x mandatory;
+}
+.film-strip-item { flex: 0 0 auto; width: 150px; text-decoration: none; scroll-snap-align: start; }
+.film-strip-item img, .film-strip-placeholder {
+  width: 150px; height: 220px; object-fit: cover; border-radius: 6px;
+  border: 1px solid var(--line); display: flex; align-items: center; justify-content: center;
+  color: var(--line); font-family: var(--font-display); background-color: var(--bg-curtain);
+}
+.film-strip-title {
+  font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.film-strip::-webkit-scrollbar { height: 6px; }
+.film-strip::-webkit-scrollbar-thumb { background-color: var(--line); border-radius: 4px; }

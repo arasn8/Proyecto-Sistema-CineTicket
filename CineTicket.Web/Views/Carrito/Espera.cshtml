@@ -1,0 +1,47 @@
+@model Venta
+@{
+    ViewData["Title"] = "Confirmando tu compra";
+}
+<div class="text-center mb-4">
+    <div class="badge-genre mb-2" style="font-size:0.9rem;border-color:var(--marquee-red);color:#e0a0a0;">PENDIENTE DE CONFIRMACIÓN</div>
+    <h1 class="display-font" style="font-size:2.4rem;">Estamos confirmando tu compra</h1>
+    <p class="poster-meta">N° de orden @Model.IdVenta · @Model.FechaVenta.ToString("dd/MM/yyyy HH:mm")</p>
+</div>
+
+<div class="mt-4">
+@foreach (var d in Model.DetalleVenta)
+{
+    <div class="ticket">
+        <div class="ticket-main">
+            <div class="ticket-title">@d.IdFuncionNavigation.IdPeliculaNavigation.Titulo</div>
+            <div class="ticket-info">
+                @d.IdFuncionNavigation.Fecha.ToString("dd/MM/yyyy") @d.IdFuncionNavigation.Hora.ToString("HH:mm")
+                · Sala @d.IdFuncionNavigation.IdSalaNavigation.Nombre
+                · Asiento @d.IdAsientoNavigation.Fila@d.IdAsientoNavigation.Numero
+            </div>
+        </div>
+        <div class="ticket-stub">S/ @d.Precio</div>
+    </div>
+}
+</div>
+
+<div class="d-flex justify-content-between align-items-center mt-3 pt-3" style="border-top:2px solid var(--line)">
+    <span class="display-font" style="font-size:1.4rem;">Total</span>
+    <span class="ticket-price" style="font-size:1.4rem;">S/ @Model.Total</span>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6 mb-2">
+        <form asp-action="ConfirmarPago" asp-route-id="@Model.IdVenta" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-success w-100 py-2">Confirmar pago</button>
+        </form>
+    </div>
+    <div class="col-md-6 mb-2">
+        <form asp-action="CancelarPendiente" asp-route-id="@Model.IdVenta" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-danger w-100 py-2">Cancelar compra</button>
+        </form>
+    </div>
+</div>
+<p class="poster-meta text-center mt-3"> simulacion con el botón "Confirmar pago".</p>
