@@ -2,42 +2,96 @@
 @model List<Pelicula>
 @{
     ViewData["Title"] = "Cartelera";
+    var formatosPorPelicula = (Dictionary<int, List<string>>)ViewBag.FormatosPorPelicula;
+    var idsEstreno = (HashSet<int>)ViewBag.IdsEstreno;
 }
 <div class="mb-4">
-    <h1 class="display-font" style="font-size:3rem;">En cartelera</h1>
-    <p class="text-muted">Elige tu película y reserva tu asiento</p>
+    <h1 class="display-font" style="font-size:2.6rem;">Películas en cartelera</h1>
 </div>
 
-<form method="get" class="genre-filter mb-4">
-    <select name="idGenero" class="form-select" onchange="this.form.submit()" asp-items="@(new SelectList(ViewBag.Generos, "IdGenero", "Nombre", ViewBag.GeneroSeleccionado))">
-        <option value="">Todos los géneros</option>
-    </select>
-</form>
-
-<div class="row row-cols-1 row-cols-md-3 g-4">
-@foreach (var p in Model)
-{
-    <div class="col">
-        <div class="poster-card card h-100">
-            @if (!string.IsNullOrEmpty(p.ImagenUrl))
-            {
-                <img src="@p.ImagenUrl" class="card-img-top" style="height:320px;object-fit:cover" />
-            }
-            else
-            {
-                <div style="height:320px;background:var(--bg-curtain);display:flex;align-items:center;justify-content:center;">
-                    <span class="display-font" style="color:var(--line);font-size:2rem;">CineTicket</span>
-                </div>
-            }
-            <div class="card-body">
-                <h5 class="card-title mb-1">@p.Titulo</h5>
-                <span class="badge-genre">@p.IdGeneroNavigation?.Nombre</span>
-                <div class="poster-meta mt-2">@p.DuracionMin MIN · @p.Clasificacion</div>
-            </div>
-            <div class="card-footer">
-                <a asp-action="Detalle" asp-route-id="@p.IdPelicula" class="btn btn-primary w-100">Ver funciones</a>
-            </div>
+<form method="get" class="filter-bar mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Buscar</label>
+            <input type="text" name="buscar" value="@ViewBag.Buscar" class="form-control"
+                   placeholder="Nombre de la película..." />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Género</label>
+            <select name="idGenero" class="form-select"
+                    asp-items="@(new SelectList(ViewBag.Generos, "IdGenero", "Nombre", (int?)ViewBag.GeneroSeleccionado))">
+                <option value="">Todos</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Formato</label>
+            <select name="tipoSala" class="form-select">
+                <option value="">Todos</option>
+                <option value="2D" selected="@(ViewBag.TipoSalaSeleccionado == "2D")">2D</option>
+                <option value="3D" selected="@(ViewBag.TipoSalaSeleccionado == "3D")">3D</option>
+                <option value="VIP" selected="@(ViewBag.TipoSalaSeleccionado == "VIP")">VIP</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Idioma</label>
+            <select name="idioma" class="form-select">
+                <option value="">Todos</option>
+                <option value="Doblada" selected="@(ViewBag.IdiomaSeleccionado == "Doblada")">Doblada</option>
+                <option value="Subtitulada" selected="@(ViewBag.IdiomaSeleccionado == "Subtitulada")">Subtitulada
+                </option>
+                <option value="Original" selected="@(ViewBag.IdiomaSeleccionado == "Original")">Original</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Buscar</button>
         </div>
     </div>
+</form>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">No se encontraron películas con esos filtros.</p>
 }
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    @foreach (var p in Model)
+    {
+        var formatos = formatosPorPelicula.ContainsKey(p.IdPelicula) ? formatosPorPelicula[p.IdPelicula] : new
+        List<string>();
+        <div class="col">
+            <div class="poster-card card h-100">
+                <div class="poster-img-wrap">
+                    @if (!string.IsNullOrEmpty(p.ImagenUrl))
+                    {
+                        <img src="@p.ImagenUrl" class="card-img-top" style="height:320px;object-fit:cover" />
+                    }
+                    else
+                    {
+                        <div
+                            style="height:320px;background:var(--bg-curtain);display:flex;align-items:center;justify-content:center;">
+                            <span class="display-font" style="color:var(--line);font-size:2rem;">CineTicket</span>
+                        </div>
+                    }
+                    @if (idsEstreno.Contains(p.IdPelicula))
+                    {
+                        <span class="estreno-tag">ESTRENO</span>
+                    }
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title mb-2">@p.Titulo</h5>
+                    <div class="d-flex flex-wrap gap-1 mb-2">
+                        <span class="badge-genre">@p.Clasificacion</span>
+                        @foreach (var fmt in formatos)
+                        {
+                            <span class="badge-genre">@fmt</span>
+                        }
+                    </div>
+                    <div class="poster-meta">@p.DuracionMin MIN · @p.IdGeneroNavigation?.Nombre</div>
+                </div>
+                <div class="card-footer">
+                    <a asp-action="Detalle" asp-route-id="@p.IdPelicula" class="btn btn-primary w-100">Ver funciones</a>
+                </div>
+            </div>
+        </div>
+    }
 </div>

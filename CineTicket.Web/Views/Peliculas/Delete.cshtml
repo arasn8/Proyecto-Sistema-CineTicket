@@ -9,6 +9,14 @@
         <p class="card-text">@Model.IdGeneroNavigation?.Nombre — @Model.DuracionMin min — @Model.Clasificacion</p>
     </div>
 </div>
+<div class="col-md-4 mb-3">
+    <label class="form-label">Idioma</label>
+    <select asp-for="Idioma" class="form-select">
+        <option value="Doblada">Doblada</option>
+        <option value="Subtitulada">Subtitulada</option>
+        <option value="Original">Original</option>
+    </select>
+</div>
 <form asp-action="Delete" asp-route-id="@Model.IdPelicula" method="post" class="mt-3">
     @Html.AntiForgeryToken()
     <button type="submit" class="btn btn-danger">Sí, eliminar</button>

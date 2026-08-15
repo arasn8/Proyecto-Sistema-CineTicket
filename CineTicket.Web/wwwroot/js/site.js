@@ -51,3 +51,74 @@ function mostrarToast(mensaje, tipo) {
     setTimeout(() => div.classList.add('toast-cine-out'), 2600);
     setTimeout(() => div.remove(), 3000);
 }
+// ---------- Panel de autenticacion (login / registro / recuperar) ----------
+function mostrarAuthTab(id, btn) {
+    document.querySelectorAll('.auth-pane').forEach(p => p.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    document.getElementById('authFeedback').innerHTML = '';
+    if (btn) {
+        document.querySelectorAll('.auth-tabs .nav-link').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+}
+
+function feedbackAuth(mensaje, tipo) {
+    document.getElementById('authFeedback').innerHTML =
+        `<div class="alert alert-${tipo === 'error' ? 'danger' : 'success'} py-2">${mensaje}</div>`;
+}
+
+async function postAuth(url, form) {
+    const token = form.querySelector('input[name="__RequestVerificationToken"]').value;
+    const body = new URLSearchParams(new FormData(form));
+    const res = await fetch(url, { method: 'POST', headers: { 'RequestVerificationToken': token }, body });
+    return res.json();
+}
+
+async function enviarLogin(e) {
+    e.preventDefault();
+    const data = await postAuth('/Account/LoginAjax', e.target);
+    if (data.success) { location.reload(); } else { feedbackAuth(data.mensaje, 'error'); }
+    return false;
+}
+
+async function enviarRegistro(e) {
+    e.preventDefault();
+    const data = await postAuth('/Account/RegisterAjax', e.target);
+    if (data.success) {
+        feedbackAuth(data.mensaje, 'success');
+        setTimeout(() => mostrarAuthTab('pane-login', document.querySelector('.auth-tabs .nav-link')), 1200);
+    } else {
+        feedbackAuth(data.mensaje, 'error');
+    }
+    return false;
+}
+
+async function enviarForgot(e) {
+    e.preventDefault();
+    const data = await postAuth('/Account/ForgotPasswordAjax', e.target);
+    if (data.success) {
+        feedbackAuth(`${data.mensaje} Tu código (demo): <strong>${data.codigoDemo}</strong>`, 'success');
+        document.getElementById('formReset').style.display = 'block';
+    } else {
+        feedbackAuth(data.mensaje, 'error');
+    }
+    return false;
+}
+
+async function enviarReset(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    formData.append('correo', document.getElementById('forgotCorreo').value);
+    const token = e.target.querySelector('input[name="__RequestVerificationToken"]').value;
+    const res = await fetch('/Account/ResetPasswordAjax', {
+        method: 'POST', headers: { 'RequestVerificationToken': token }, body: new URLSearchParams(formData)
+    });
+    const data = await res.json();
+    if (data.success) {
+        feedbackAuth(data.mensaje, 'success');
+        setTimeout(() => mostrarAuthTab('pane-login', document.querySelector('.auth-tabs .nav-link')), 1200);
+    } else {
+        feedbackAuth(data.mensaje, 'error');
+    }
+    return false;
+}

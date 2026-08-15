@@ -25,8 +25,17 @@
             <input asp-for="Clasificacion" class="form-control" placeholder="Ej: PG-13" required />
         </div>
         <div class="col-md-4 mb-3">
+            <label class="form-label">Idioma</label>
+            <select asp-for="Idioma" class="form-select">
+                <option value="Doblada">Doblada</option>
+                <option value="Subtitulada">Subtitulada</option>
+                <option value="Original">Original</option>
+            </select>
+        </div>
+        <div class="col-md-4 mb-3">
             <label class="form-label">Género</label>
-            <select asp-for="IdGenero" class="form-select" asp-items="@(new SelectList(ViewBag.Generos, "IdGenero", "Nombre"))" required>
+            <select asp-for="IdGenero" class="form-select"
+                    asp-items="@(new SelectList(ViewBag.Generos, "IdGenero", "Nombre"))" required>
                 <option value="">-- Seleccione --</option>
             </select>
         </div>

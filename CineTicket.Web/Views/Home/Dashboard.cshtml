@@ -1,0 +1,19 @@
+@{
+    ViewData["Title"] = "Panel de administración";
+}
+<h1 class="display-font" style="font-size:2.4rem;">Panel de administración</h1>
+<p class="poster-meta mb-4">Resumen del día — @DateTime.Now.ToString("dd/MM/yyyy")</p>
+
+<div class="row row-cols-2 row-cols-md-5 g-3 mb-4">
+    <div class="col"><div class="stat-card"><div class="stat-num">@ViewBag.TotalPeliculas</div><div class="stat-label">Películas activas</div></div></div>
+    <div class="col"><div class="stat-card"><div class="stat-num">@ViewBag.FuncionesHoy</div><div class="stat-label">Funciones hoy</div></div></div>
+    <div class="col"><div class="stat-card"><div class="stat-num">@ViewBag.VentasHoy</div><div class="stat-label">Ventas hoy</div></div></div>
+    <div class="col"><div class="stat-card"><div class="stat-num">S/ @ViewBag.RecaudadoHoy</div><div class="stat-label">Recaudado hoy</div></div></div>
+    <div class="col"><div class="stat-card"><div class="stat-num">@ViewBag.TotalUsuarios</div><div class="stat-label">Usuarios activos</div></div></div>
+</div>
+
+<div class="d-flex flex-wrap gap-2">
+    <a asp-controller="Peliculas" asp-action="Index" class="btn btn-outline-primary">Gestionar Películas</a>
+    <a asp-controller="Funciones" asp-action="Index" class="btn btn-outline-primary">Gestionar Funciones</a>
+    <a asp-controller="Reportes" asp-action="Ventas" class="btn btn-outline-primary">Ver Reportes</a>
+</div>

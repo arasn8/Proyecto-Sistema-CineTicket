@@ -11,6 +11,16 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
+        if (User.IsInRole("Administrador"))
+        {
+            ViewBag.TotalPeliculas = await _db.Peliculas.CountAsync(p => p.Estado);
+            ViewBag.FuncionesHoy = await _db.Funciones.CountAsync(f => f.Fecha == DateOnly.FromDateTime(DateTime.Today));
+            ViewBag.VentasHoy = await _db.Ventas.CountAsync(v => v.Estado == "CONFIRMADA" && v.FechaVenta.Date == DateTime.Today);
+            ViewBag.RecaudadoHoy = await _db.Ventas.Where(v => v.Estado == "CONFIRMADA" && v.FechaVenta.Date == DateTime.Today).SumAsync(v => (decimal?)v.Total) ?? 0;
+            ViewBag.TotalUsuarios = await _db.Usuarios.CountAsync(u => u.Estado);
+            return View("Dashboard");
+        }
+
         var estrenos = await _db.Peliculas
             .Include(p => p.IdGeneroNavigation)
             .Where(p => p.Estado)
@@ -31,10 +41,11 @@ public class HomeController : Controller
 
         var idsTop = topPorVentas.Select(x => x.IdPelicula).ToList();
         var topPeliculas = await _db.Peliculas.Where(p => idsTop.Contains(p.IdPelicula)).ToListAsync();
-        var listaTop = idsTop.Select(id => topPeliculas.FirstOrDefault(p => p.IdPelicula == id)).Where(p => p != null).ToList();
-
-        ViewBag.TopPeliculas = listaTop.Any() ? listaTop : estrenos; // si aun no hay ventas, muestra los estrenos
+        var listaTop = idsTop.Select(id => topPeliculas.FirstOrDefault(p => p.IdPelicula == id)).Where(p => p != null) .Select(p => p!).ToList();
+        ViewBag.TopPeliculas = listaTop.Any() ? listaTop : estrenos;
 
         return View(estrenos);
     }
+
+    public IActionResult Error() => View();
 }

@@ -2,9 +2,11 @@
 @{
     ViewData["Title"] = Model.Titulo;
     var funciones = (List<Funcione>)ViewBag.Funciones;
+    var fechas = (List<DateOnly>)ViewBag.FechasDisponibles;
+    var fechaSel = (DateOnly)ViewBag.FechaSeleccionada;
 }
 <div class="row">
-    <div class="col-md-4 mb-4">
+    <div class="col-md-4">
         @if (!string.IsNullOrEmpty(Model.ImagenUrl))
         {
             <img src="@Model.ImagenUrl" class="img-fluid rounded" style="border:1px solid var(--line)" />
@@ -12,30 +14,65 @@
     </div>
     <div class="col-md-8">
         <h1 class="display-font" style="font-size:2.6rem;border:none;margin-bottom:0.3rem;">@Model.Titulo</h1>
-        <span class="badge-genre">@Model.IdGeneroNavigation?.Nombre</span>
-        <span class="poster-meta ms-2">@Model.DuracionMin MIN · @Model.Clasificacion</span>
+        <div class="d-flex flex-wrap gap-1 mb-2">
+            <span class="badge-genre">@Model.IdGeneroNavigation?.Nombre</span>
+            <span class="badge-genre">@Model.Clasificacion</span>
+            <span class="badge-genre">@Model.Idioma</span>
+        </div>
+        <span class="poster-meta">@Model.DuracionMin MIN</span>
         <p class="mt-3" style="color:var(--text-muted)">@Model.Sinopsis</p>
 
-        <h4 class="display-font mt-4" style="font-size:1.4rem;border:none;">Funciones disponibles</h4>
-        @if (!funciones.Any())
+        <h4 class="display-font mt-4" style="font-size:1.4rem;border:none;">Elige la fecha</h4>
+
+        @if (!fechas.Any())
         {
             <p class="text-muted">No hay funciones programadas por el momento.</p>
         }
-        <div class="d-flex flex-column gap-2 mt-3">
-        @foreach (var f in funciones)
+        else
         {
-            <a asp-controller="Cartelera" asp-action="Asientos" asp-route-idFuncion="@f.IdFuncion"
-               class="ticket text-decoration-none">
-                <div class="ticket-main d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="ticket-title">@f.Fecha.ToString("dd MMM").ToUpper()</div>
-                        <div class="ticket-info">@f.Hora.ToString("HH:mm") · Sala @f.IdSalaNavigation?.Nombre</div>
-                    </div>
-                    <div class="ticket-price">S/ @f.PrecioEntrada</div>
+            <div class="calendar-strip mb-3">
+            @foreach (var f in fechas)
+            {
+                <a asp-action="Detalle" asp-route-id="@Model.IdPelicula" asp-route-fecha="@f.ToString("yyyy-MM-dd")" asp-route-tipoSala="@ViewBag.TipoSalaSeleccionado"
+                   class="calendar-day @(f == fechaSel ? "active" : "")">
+                    <span class="calendar-dow">@f.ToDateTime(TimeOnly.MinValue).ToString("ddd").ToUpper()</span>
+                    <span class="calendar-num">@f.Day</span>
+                </a>
+            }
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Formato</label>
+                <div class="d-flex gap-2">
+                    <a asp-action="Detalle" asp-route-id="@Model.IdPelicula" asp-route-fecha="@fechaSel.ToString("yyyy-MM-dd")"
+                       class="btn btn-sm @(ViewBag.TipoSalaSeleccionado == null ? "btn-primary" : "btn-outline-secondary")">Todos</a>
+                    @foreach (var tipo in new[] { "2D", "3D", "VIP" })
+                    {
+                        <a asp-action="Detalle" asp-route-id="@Model.IdPelicula" asp-route-fecha="@fechaSel.ToString("yyyy-MM-dd")" asp-route-tipoSala="@tipo"
+                           class="btn btn-sm @(ViewBag.TipoSalaSeleccionado?.ToString() == tipo ? "btn-primary" : "btn-outline-secondary")">@tipo</a>
+                    }
                 </div>
-                <div class="ticket-stub">ELEGIR<br />ASIENTO</div>
-            </a>
+            </div>
+
+            @if (!funciones.Any())
+            {
+                <p class="text-muted">No hay funciones con ese formato para la fecha elegida.</p>
+            }
+            <div class="d-flex flex-column gap-2">
+            @foreach (var f in funciones)
+            {
+                <a asp-controller="Cartelera" asp-action="Asientos" asp-route-idFuncion="@f.IdFuncion" class="ticket text-decoration-none">
+                    <div class="ticket-main d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="ticket-title">@f.Hora.ToString("HH:mm")</div>
+                            <div class="ticket-info">Sala @f.IdSalaNavigation?.Nombre · @f.IdSalaNavigation?.Tipo</div>
+                        </div>
+                        <div class="ticket-price">S/ @f.PrecioEntrada</div>
+                    </div>
+                    <div class="ticket-stub">ELEGIR<br />ASIENTO</div>
+                </a>
+            }
+            </div>
         }
-        </div>
     </div>
 </div>

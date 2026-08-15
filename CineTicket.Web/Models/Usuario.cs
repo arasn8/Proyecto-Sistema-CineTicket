@@ -22,4 +22,7 @@ public partial class Usuario
     public virtual Role IdRolNavigation { get; set; } = null!;
 
     public virtual ICollection<Venta> Venta { get; set; } = new List<Venta>();
+
+    public string? CodigoReset { get; set; }
+    public DateTime? CodigoResetExpira { get; set; }
 }

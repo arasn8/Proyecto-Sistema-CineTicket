@@ -513,3 +513,101 @@ footer {
 }
 .film-strip::-webkit-scrollbar { height: 6px; }
 .film-strip::-webkit-scrollbar-thumb { background-color: var(--line); border-radius: 4px; }
+
+/* ---------- Barra de filtros cartelera ---------- */
+.filter-bar {
+  background-color: var(--bg-curtain);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+}
+
+/* ---------- Etiqueta ESTRENO ---------- */
+.poster-img-wrap { position: relative; }
+.estreno-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: var(--marquee-red);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+/* ---------- Footer organizado ---------- */
+.site-footer {
+  border-top: 1px solid var(--line);
+  margin-top: 3rem;
+  background-color: var(--bg-curtain);
+}
+.footer-heading {
+  font-family: var(--font-display);
+  color: var(--gold);
+  letter-spacing: 0.04em;
+  margin-bottom: 0.8rem;
+  font-size: 1.1rem;
+}
+.footer-link {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+}
+.footer-link:hover { color: var(--gold); }
+.footer-bottom {
+  border-top: 1px solid var(--line);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+}
+/* ---------- Panel deslizante de autenticacion ---------- */
+.auth-panel {
+  background-color: var(--bg-panel);
+  border-left: 1px solid var(--gold-dim);
+  width: 400px;
+  color: var(--text-main);
+}
+.auth-tabs .nav-link {
+  background-color: var(--bg-curtain);
+  color: var(--text-muted);
+  border: 1px solid var(--line);
+  font-size: 0.85rem;
+}
+.auth-tabs .nav-link.active { background-color: var(--gold); color: #1A1310; border-color: var(--gold); }
+
+/* ---------- Calendario de fechas ---------- */
+.calendar-strip { display: flex; gap: 0.6rem; overflow-x: auto; padding-bottom: 0.4rem; }
+.calendar-day {
+  flex: 0 0 auto;
+  width: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.6rem 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background-color: var(--bg-panel);
+  text-decoration: none;
+}
+.calendar-dow { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.05em; }
+.calendar-num { font-family: var(--font-display); font-size: 1.4rem; color: var(--text-main); }
+.calendar-day.active { background-color: var(--gold); border-color: var(--gold); }
+.calendar-day.active .calendar-dow, .calendar-day.active .calendar-num { color: #1A1310; }
+
+/* ---------- Dashboard admin ---------- */
+.stat-card {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gold);
+  border-radius: 8px;
+  padding: 1.2rem;
+  text-align: center;
+}
+.stat-num { font-family: var(--font-display); font-size: 2rem; color: var(--gold); }
+.stat-label { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.03em; text-transform: uppercase; }

@@ -36,9 +36,10 @@ public class PeliculasController : Controller
         }
 
         await _db.Database.ExecuteSqlInterpolatedAsync($@"
-            EXEC sp_Peliculas_Insertar
-                @Titulo={model.Titulo}, @Sinopsis={model.Sinopsis}, @DuracionMin={model.DuracionMin},
-                @Clasificacion={model.Clasificacion}, @IdGenero={model.IdGenero}, @ImagenUrl={model.ImagenUrl}");
+        EXEC sp_Peliculas_Insertar
+            @Titulo={model.Titulo}, @Sinopsis={model.Sinopsis}, @DuracionMin={model.DuracionMin},
+            @Clasificacion={model.Clasificacion}, @IdGenero={model.IdGenero}, @ImagenUrl={model.ImagenUrl},
+            @Idioma={model.Idioma}");
 
         TempData["Ok"] = "Película registrada correctamente.";
         return RedirectToAction(nameof(Index));
@@ -65,10 +66,10 @@ public class PeliculasController : Controller
         }
 
         await _db.Database.ExecuteSqlInterpolatedAsync($@"
-            EXEC sp_Peliculas_Actualizar
-                @IdPelicula={model.IdPelicula}, @Titulo={model.Titulo}, @Sinopsis={model.Sinopsis},
-                @DuracionMin={model.DuracionMin}, @Clasificacion={model.Clasificacion},
-                @IdGenero={model.IdGenero}, @ImagenUrl={model.ImagenUrl}");
+        EXEC sp_Peliculas_Actualizar
+            @IdPelicula={model.IdPelicula}, @Titulo={model.Titulo}, @Sinopsis={model.Sinopsis},
+            @DuracionMin={model.DuracionMin}, @Clasificacion={model.Clasificacion},
+            @IdGenero={model.IdGenero}, @ImagenUrl={model.ImagenUrl}, @Idioma={model.Idioma}");
 
         TempData["Ok"] = "Película actualizada correctamente.";
         return RedirectToAction(nameof(Index));
@@ -95,7 +96,7 @@ public class PeliculasController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EliminarAjax(int id)
     {
-    await _db.Database.ExecuteSqlInterpolatedAsync($"EXEC sp_Peliculas_Eliminar @IdPelicula={id}");
-    return Json(new { success = true, mensaje = "Película eliminada correctamente." });
+        await _db.Database.ExecuteSqlInterpolatedAsync($"EXEC sp_Peliculas_Eliminar @IdPelicula={id}");
+        return Json(new { success = true, mensaje = "Película eliminada correctamente." });
     }
 }

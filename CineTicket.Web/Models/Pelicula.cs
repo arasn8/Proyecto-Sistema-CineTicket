@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace CineTicket.Web.Models;
 
@@ -24,4 +25,6 @@ public partial class Pelicula
     public virtual ICollection<Funcione> Funciones { get; set; } = new List<Funcione>();
 
     public virtual Genero IdGeneroNavigation { get; set; } = null!;
+    [Required, StringLength(20)]
+    public string Idioma { get; set; } = "Doblada";
 }
