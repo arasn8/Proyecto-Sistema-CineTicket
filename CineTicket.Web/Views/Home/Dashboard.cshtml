@@ -1,19 +1,89 @@
 @{
     ViewData["Title"] = "Panel de administración";
+    var peliculasEnFuncion = (List<Pelicula>)ViewBag.PeliculasEnFuncion;
 }
-<h1 class="display-font" style="font-size:2.4rem;">Panel de administración</h1>
-<p class="poster-meta mb-4">Resumen del día — @DateTime.Now.ToString("dd/MM/yyyy")</p>
-
-<div class="row row-cols-2 row-cols-md-5 g-3 mb-4">
-    <div class="col"><div class="stat-card"><div class="stat-num">@ViewBag.TotalPeliculas</div><div class="stat-label">Películas activas</div></div></div>
-    <div class="col"><div class="stat-card"><div class="stat-num">@ViewBag.FuncionesHoy</div><div class="stat-label">Funciones hoy</div></div></div>
-    <div class="col"><div class="stat-card"><div class="stat-num">@ViewBag.VentasHoy</div><div class="stat-label">Ventas hoy</div></div></div>
-    <div class="col"><div class="stat-card"><div class="stat-num">S/ @ViewBag.RecaudadoHoy</div><div class="stat-label">Recaudado hoy</div></div></div>
-    <div class="col"><div class="stat-card"><div class="stat-num">@ViewBag.TotalUsuarios</div><div class="stat-label">Usuarios activos</div></div></div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="display-font" style="font-size:2.4rem;">Panel de administración</h1>
+        <p class="poster-meta">Resumen del día — @DateTime.Now.ToString("dd/MM/yyyy")</p>
+    </div>
+    <a asp-controller="Home" asp-action="VistaPublica" class="btn btn-outline-primary">🎬 Ver página principal</a>
 </div>
 
-<div class="d-flex flex-wrap gap-2">
-    <a asp-controller="Peliculas" asp-action="Index" class="btn btn-outline-primary">Gestionar Películas</a>
-    <a asp-controller="Funciones" asp-action="Index" class="btn btn-outline-primary">Gestionar Funciones</a>
-    <a asp-controller="Reportes" asp-action="Ventas" class="btn btn-outline-primary">Ver Reportes</a>
+<div class="row">
+    <!-- Columna principal: estadisticas y accesos rapidos -->
+    <div class="col-lg-8">
+        <div class="row row-cols-2 row-cols-md-3 g-3 mb-4">
+            <div class="col"><div class="stat-card"><div class="stat-num">@ViewBag.TotalPeliculas</div><div class="stat-label">Películas activas</div></div></div>
+            <div class="col"><div class="stat-card"><div class="stat-num">@ViewBag.FuncionesHoy</div><div class="stat-label">Funciones hoy</div></div></div>
+            <div class="col"><div class="stat-card"><div class="stat-num">@ViewBag.VentasHoy</div><div class="stat-label">Ventas hoy</div></div></div>
+            <div class="col"><div class="stat-card"><div class="stat-num">S/ @ViewBag.RecaudadoHoy</div><div class="stat-label">Recaudado hoy</div></div></div>
+            <div class="col"><div class="stat-card"><div class="stat-num">@ViewBag.TotalUsuarios</div><div class="stat-label">Usuarios activos</div></div></div>
+        </div>
+
+        <h5 class="display-font mb-3" style="font-size:1.3rem;border:none;">Accesos rápidos</h5>
+        <div class="d-flex flex-wrap gap-2 mb-4">
+            <a asp-controller="Peliculas" asp-action="Index" class="btn btn-outline-primary">Películas</a>
+            <a asp-controller="Generos" asp-action="Index" class="btn btn-outline-primary">Géneros</a>
+            <a asp-controller="Salas" asp-action="Index" class="btn btn-outline-primary">Salas</a>
+            <a asp-controller="Funciones" asp-action="Index" class="btn btn-outline-primary">Funciones</a>
+            <a asp-controller="Usuarios" asp-action="Index" class="btn btn-outline-primary">Usuarios</a>
+            <a asp-controller="Reportes" asp-action="Ventas" class="btn btn-outline-primary">Reportes</a>
+        </div>
+    </div>
+
+    <!-- Columna lateral: carrusel de peliculas con funciones vigentes -->
+    <div class="col-lg-4">
+        <h5 class="display-font mb-3" style="font-size:1.3rem;border:none;">En función ahora</h5>
+
+        @if (!peliculasEnFuncion.Any())
+        {
+            <p class="poster-meta">No hay películas con funciones programadas.</p>
+        }
+        else
+        {
+            <div id="carruselAdmin" class="carousel slide admin-carousel" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                @for (int i = 0; i < peliculasEnFuncion.Count; i++)
+                {
+                    var p = peliculasEnFuncion[i];
+                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                        <a asp-controller="Peliculas" asp-action="Edit" asp-route-id="@p.IdPelicula" class="text-decoration-none">
+                            @if (!string.IsNullOrEmpty(p.ImagenUrl))
+                            {
+                                <img src="@p.ImagenUrl" class="admin-carousel-img" />
+                            }
+                            else
+                            {
+                                <div class="admin-carousel-img d-flex align-items-center justify-content-center">
+                                    <span class="display-font" style="color:var(--line);font-size:1.6rem;">CineTicket</span>
+                                </div>
+                            }
+                            <div class="admin-carousel-caption">
+                                <div class="ticket-title" style="font-size:1.2rem;">@p.Titulo</div>
+                                <div class="badge-genre">@p.IdGeneroNavigation?.Nombre</div>
+                            </div>
+                        </a>
+                    </div>
+                }
+                </div>
+                @if (peliculasEnFuncion.Count > 1)
+                {
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carruselAdmin" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carruselAdmin" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+                    <div class="carousel-indicators">
+                    @for (int i = 0; i < peliculasEnFuncion.Count; i++)
+                    {
+                        <button type="button" data-bs-target="#carruselAdmin" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")"></button>
+                    }
+                    </div>
+                }
+            </div>
+            <p class="poster-meta mt-2 text-center">Clic en la imagen para editar la película</p>
+        }
+    </div>
 </div>

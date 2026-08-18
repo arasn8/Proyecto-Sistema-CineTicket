@@ -1,38 +1,130 @@
-@using Microsoft.AspNetCore.Mvc.Rendering
-@model Funcione
+@model FuncionRangoViewModel
 @{
-    ViewData["Title"] = "Nueva Función";
+    ViewData["Title"] = "Programar Funciones";
+    var peliculas = (List<Pelicula>)ViewBag.Peliculas;
+    var salas = (List<Sala>)ViewBag.Salas;
 }
-<h2>Nueva función</h2>
-<form asp-action="Create" method="post" style="max-width:500px">
-    @Html.AntiForgeryToken()
-    <div asp-validation-summary="All" class="text-danger"></div>
-    <div class="mb-3">
+<h2>Programar funciones</h2>
+<p class="poster-meta mb-4">Elige la película y el rango de fechas, genera el calendario, y define sala y horarios propios para cada día (puedes dejar días sin programar).</p>
+
+<div class="row g-2 align-items-end mb-4" style="max-width:700px">
+    <div class="col-md-5">
         <label class="form-label">Película</label>
-        <select asp-for="IdPelicula" class="form-select" asp-items="@(new SelectList(ViewBag.Peliculas, "IdPelicula", "Titulo"))" required>
+        <select id="selPelicula" class="form-select">
             <option value="">-- Seleccione --</option>
+            @foreach (var p in peliculas)
+            {
+                <option value="@p.IdPelicula">@p.Titulo</option>
+            }
         </select>
     </div>
-    <div class="mb-3">
-        <label class="form-label">Sala</label>
-        <select asp-for="IdSala" class="form-select" asp-items="@(new SelectList(ViewBag.Salas, "IdSala", "Nombre"))" required>
-            <option value="">-- Seleccione --</option>
-        </select>
+    <div class="col-md-3">
+        <label class="form-label">Desde</label>
+        <input id="inpDesde" type="date" class="form-control" value="@Model.FechaInicio.ToString("yyyy-MM-dd")" />
     </div>
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <label class="form-label">Fecha</label>
-            <input asp-for="Fecha" type="date" class="form-control" required />
-        </div>
-        <div class="col-md-6 mb-3">
-            <label class="form-label">Hora</label>
-            <input asp-for="Hora" type="time" class="form-control" required />
-        </div>
+    <div class="col-md-3">
+        <label class="form-label">Hasta</label>
+        <input id="inpHasta" type="date" class="form-control" value="@Model.FechaFin.ToString("yyyy-MM-dd")" />
     </div>
-    <div class="mb-3">
-        <label class="form-label">Precio de entrada (S/)</label>
-        <input asp-for="PrecioEntrada" type="number" step="0.01" class="form-control" required />
+    <div class="col-md-1">
+        <button type="button" class="btn btn-primary w-100" onclick="generarCalendario()">Ir</button>
     </div>
-    <button type="submit" class="btn btn-primary">Guardar</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</div>
+
+<div id="errorGeneral" class="text-danger mb-3"></div>
+
+<form asp-action="Create" method="post" id="formFunciones">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="idPelicula" id="hiddenIdPelicula" />
+    <div id="diasContainer"></div>
+
+    <button type="submit" class="btn btn-success mt-2" id="btnGuardar" style="display:none">Guardar funciones programadas</button>
+    <a asp-action="Index" class="btn btn-secondary mt-2">Cancelar</a>
 </form>
+
+@section Scripts {
+<script>
+    const SALAS = @Html.Raw(Json.Serialize(salas.Select(s => new { s.IdSala, s.Nombre })));
+
+    function generarCalendario() {
+        const idPelicula = document.getElementById('selPelicula').value;
+        const desde = document.getElementById('inpDesde').value;
+        const hasta = document.getElementById('inpHasta').value;
+        const errorEl = document.getElementById('errorGeneral');
+        errorEl.textContent = '';
+
+        if (!idPelicula) { errorEl.textContent = 'Selecciona una película.'; return; }
+        if (!desde || !hasta) { errorEl.textContent = 'Indica ambas fechas.'; return; }
+
+        const fechaIni = new Date(desde + 'T00:00:00');
+        const fechaFin = new Date(hasta + 'T00:00:00');
+        if (fechaFin < fechaIni) { errorEl.textContent = 'La fecha "Hasta" no puede ser anterior a "Desde".'; return; }
+
+        const dias = Math.round((fechaFin - fechaIni) / 86400000) + 1;
+        if (dias > 60) { errorEl.textContent = 'El rango no puede superar 60 días.'; return; }
+
+        document.getElementById('hiddenIdPelicula').value = idPelicula;
+
+        const cont = document.getElementById('diasContainer');
+        cont.innerHTML = '';
+
+        const nombresDia = ['Dom','Lun','Mar','Mié','Jué','Vie','Sáb'];
+
+        for (let i = 0; i < dias; i++) {
+            const f = new Date(fechaIni);
+            f.setDate(f.getDate() + i);
+            const fechaStr = f.toISOString().split('T')[0];
+            const etiqueta = `${nombresDia[f.getDay()]} ${f.getDate()}/${f.getMonth()+1}`;
+
+            const card = document.createElement('div');
+            card.className = 'card mb-2 p-3 dia-card';
+            card.innerHTML = `
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-2">
+                        <span class="fw-bold">${etiqueta}</span>
+                        <input type="hidden" name="dias[${i}].Fecha" value="${fechaStr}" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small mb-1">Sala</label>
+                        <select name="dias[${i}].IdSala" class="form-select form-select-sm">
+                            <option value="">-- Omitir este día --</option>
+                            ${SALAS.map(s => `<option value="${s.idSala}">${s.nombre}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small mb-1">Precio (S/)</label>
+                        <input name="dias[${i}].PrecioEntrada" type="number" step="0.01" class="form-control form-control-sm" />
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label small mb-1">Horarios</label>
+                        <div class="horarios-lista d-flex flex-wrap gap-2">
+                            <div class="d-flex gap-1">
+                                <input name="dias[${i}].Horarios" type="time" class="form-control form-control-sm" style="width:110px" />
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="agregarHorario(this)">+ horario</button>
+                    </div>
+                </div>
+            `;
+            cont.appendChild(card);
+        }
+
+        document.getElementById('btnGuardar').style.display = dias > 0 ? 'inline-block' : 'none';
+    }
+
+    function agregarHorario(btn) {
+        const lista = btn.closest('.col-md-5').querySelector('.horarios-lista');
+        const idx = lista.children.length;
+        const nombreInput = lista.parentElement.querySelector('input[type=hidden]')?.name; // no usado, solo referencia
+        const nameBase = lista.closest('.dia-card').querySelector('select').name.replace('.IdSala', '.Horarios');
+
+        const div = document.createElement('div');
+        div.className = 'd-flex gap-1';
+        div.innerHTML = `
+            <input name="${nameBase}" type="time" class="form-control form-control-sm" style="width:110px" />
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()">✕</button>
+        `;
+        lista.appendChild(div);
+    }
+</script>
+}

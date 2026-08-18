@@ -1,10 +1,13 @@
 using CineTicket.Web.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using CineTicket.Web.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddHostedService<LimpiezaComprasPendientesService>();
 
 builder.Services.AddDbContext<CineTicketContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("CineTicketConnection")));

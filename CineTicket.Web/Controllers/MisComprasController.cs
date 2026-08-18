@@ -16,6 +16,7 @@ public class FuncionCompradaVM
     public List<string> Asientos { get; set; } = new();
     public decimal Total { get; set; }
     public DateTime UltimaCompra { get; set; }
+    public List<int> VentaIds { get; set; } = new();
 }
 
 [Authorize]
@@ -52,7 +53,8 @@ public class MisComprasController : Controller
                 SalaNombre = g.First().IdFuncionNavigation.IdSalaNavigation.Nombre,
                 Asientos = g.Select(x => $"{x.IdAsientoNavigation.Fila}{x.IdAsientoNavigation.Numero}").OrderBy(x => x).ToList(),
                 Total = g.Sum(x => x.Precio),
-                UltimaCompra = g.Max(x => x.IdVentaNavigation.FechaVenta)
+                UltimaCompra = g.Max(x => x.IdVentaNavigation.FechaVenta),
+                VentaIds = g.Select(x => x.IdVenta).Distinct().ToList(),
             })
             .OrderByDescending(x => x.UltimaCompra)
             .ToList();

@@ -585,11 +585,11 @@ footer {
 .calendar-strip { display: flex; gap: 0.6rem; overflow-x: auto; padding-bottom: 0.4rem; }
 .calendar-day {
   flex: 0 0 auto;
-  width: 60px;
+  min-width: 68px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.6rem 0;
+  padding: 0.6rem 0.4rem;
   border: 1px solid var(--line);
   border-radius: 8px;
   background-color: var(--bg-panel);
@@ -597,8 +597,9 @@ footer {
 }
 .calendar-dow { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.05em; }
 .calendar-num { font-family: var(--font-display); font-size: 1.4rem; color: var(--text-main); }
+.calendar-formatos { font-family: var(--font-mono); font-size: 0.6rem; color: var(--gold); letter-spacing: 0.02em; margin-top: 2px; text-align: center; }
 .calendar-day.active { background-color: var(--gold); border-color: var(--gold); }
-.calendar-day.active .calendar-dow, .calendar-day.active .calendar-num { color: #1A1310; }
+.calendar-day.active .calendar-dow, .calendar-day.active .calendar-num, .calendar-day.active .calendar-formatos { color: #1A1310; }
 
 /* ---------- Dashboard admin ---------- */
 .stat-card {
@@ -611,3 +612,67 @@ footer {
 }
 .stat-num { font-family: var(--font-display); font-size: 2rem; color: var(--gold); }
 .stat-label { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.03em; text-transform: uppercase; }
+
+/* ---------- Carrusel lateral del panel admin ---------- */
+.admin-carousel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--bg-panel);
+}
+.admin-carousel-img {
+  width: 100%;
+  height: 380px;
+  object-fit: cover;
+  background-color: var(--bg-curtain);
+}
+.admin-carousel-caption {
+  padding: 1rem;
+  background: linear-gradient(0deg, var(--bg-panel) 0%, transparent 100%);
+  margin-top: -60px;
+  position: relative;
+  color: var(--text-main);
+}
+.admin-carousel .carousel-indicators [data-bs-target] {
+  background-color: var(--gold);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+}
+.admin-carousel .carousel-control-prev-icon,
+.admin-carousel .carousel-control-next-icon {
+  filter: invert(76%) sepia(41%) saturate(414%) hue-rotate(357deg);
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+/* ---------- Footer con marca y redes sociales ---------- */
+.footer-logo-icon { font-size: 1.8rem; }
+.footer-brand { font-size: 1.5rem; color: var(--gold); letter-spacing: 0.04em; }
+.footer-tagline { color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; max-width: 320px; }
+
+.social-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+}
+.social-icon:hover {
+  background-color: var(--gold);
+  border-color: var(--gold);
+  color: #1A1310;
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--line);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+}

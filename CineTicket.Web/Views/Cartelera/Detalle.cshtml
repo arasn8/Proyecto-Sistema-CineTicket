@@ -4,6 +4,8 @@
     var funciones = (List<Funcione>)ViewBag.Funciones;
     var fechas = (List<DateOnly>)ViewBag.FechasDisponibles;
     var fechaSel = (DateOnly)ViewBag.FechaSeleccionada;
+    var formatosPorFecha = (Dictionary<DateOnly, List<string>>)ViewBag.FormatosPorFecha;
+    var formatosDelDia = (List<string>)ViewBag.FormatosDelDia;
 }
 <div class="row">
     <div class="col-md-4">
@@ -33,25 +35,31 @@
             <div class="calendar-strip mb-3">
             @foreach (var f in fechas)
             {
-                <a asp-action="Detalle" asp-route-id="@Model.IdPelicula" asp-route-fecha="@f.ToString("yyyy-MM-dd")" asp-route-tipoSala="@ViewBag.TipoSalaSeleccionado"
+                var formatosEseDia = formatosPorFecha.ContainsKey(f) ? formatosPorFecha[f] : new List<string>();
+                <a asp-action="Detalle" asp-route-id="@Model.IdPelicula" asp-route-fecha="@f.ToString("yyyy-MM-dd")"
                    class="calendar-day @(f == fechaSel ? "active" : "")">
                     <span class="calendar-dow">@f.ToDateTime(TimeOnly.MinValue).ToString("ddd").ToUpper()</span>
                     <span class="calendar-num">@f.Day</span>
+                    <span class="calendar-formatos">@string.Join(" · ", formatosEseDia)</span>
                 </a>
             }
             </div>
 
             <div class="mb-4">
-                <label class="form-label">Formato</label>
+                <label class="form-label">Formato disponible este día</label>
                 <div class="d-flex gap-2">
                     <a asp-action="Detalle" asp-route-id="@Model.IdPelicula" asp-route-fecha="@fechaSel.ToString("yyyy-MM-dd")"
                        class="btn btn-sm @(ViewBag.TipoSalaSeleccionado == null ? "btn-primary" : "btn-outline-secondary")">Todos</a>
-                    @foreach (var tipo in new[] { "2D", "3D", "VIP" })
+                    @foreach (var tipo in formatosDelDia)
                     {
                         <a asp-action="Detalle" asp-route-id="@Model.IdPelicula" asp-route-fecha="@fechaSel.ToString("yyyy-MM-dd")" asp-route-tipoSala="@tipo"
                            class="btn btn-sm @(ViewBag.TipoSalaSeleccionado?.ToString() == tipo ? "btn-primary" : "btn-outline-secondary")">@tipo</a>
                     }
                 </div>
+                @if (!formatosDelDia.Any())
+                {
+                    <p class="poster-meta mt-2">No hay formatos disponibles para esta fecha.</p>
+                }
             </div>
 
             @if (!funciones.Any())

@@ -1,3 +1,4 @@
+using CineTicket.Web.Helpers;
 using CineTicket.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,6 @@ public class CarteleraController : Controller
 
         var peliculas = await query.OrderBy(p => p.Titulo).ToListAsync();
 
-        // Formatos de sala disponibles por pelicula (para las etiquetas 2D/3D/VIP) y filtro por tipo de sala
         var formatosPorPelicula = await _db.Funciones
             .Where(f => f.Fecha >= DateOnly.FromDateTime(DateTime.Today))
             .Include(f => f.IdSalaNavigation)
@@ -39,7 +39,6 @@ public class CarteleraController : Controller
             peliculas = peliculas.Where(p => idsConFormato.Contains(p.IdPelicula)).ToList();
         }
 
-        // Las 5 mas recientemente agregadas se marcan como ESTRENO
         var idsEstreno = (await _db.Peliculas.Where(p => p.Estado).OrderByDescending(p => p.IdPelicula).Take(5).Select(p => p.IdPelicula).ToListAsync()).ToHashSet();
 
         ViewBag.Generos = await _db.Generos.OrderBy(g => g.Nombre).ToListAsync();
@@ -53,7 +52,7 @@ public class CarteleraController : Controller
         return View(peliculas);
     }
 
-    // Detalle de la pelicula + funciones disponibles, con calendario de fechas y filtro de formato
+    // Detalle de la pelicula + funciones disponibles, con calendario de fechas y formatos por dia
     public async Task<IActionResult> Detalle(int id, DateOnly? fecha, string? tipoSala)
     {
         var pelicula = await _db.Peliculas.Include(p => p.IdGeneroNavigation)
@@ -69,6 +68,14 @@ public class CarteleraController : Controller
         var fechasDisponibles = todasFunciones.Select(f => f.Fecha).Distinct().OrderBy(f => f).ToList();
         var fechaSeleccionada = fecha ?? fechasDisponibles.FirstOrDefault();
 
+        var formatosPorFecha = todasFunciones
+            .GroupBy(f => f.Fecha)
+            .ToDictionary(g => g.Key, g => g.Select(f => f.IdSalaNavigation.Tipo).Distinct().OrderBy(t => t).ToList());
+
+        var formatosDelDia = formatosPorFecha.ContainsKey(fechaSeleccionada)
+            ? formatosPorFecha[fechaSeleccionada]
+            : new List<string>();
+
         var funcionesFiltradas = todasFunciones.Where(f => f.Fecha == fechaSeleccionada);
         if (!string.IsNullOrWhiteSpace(tipoSala))
             funcionesFiltradas = funcionesFiltradas.Where(f => f.IdSalaNavigation.Tipo == tipoSala);
@@ -77,6 +84,8 @@ public class CarteleraController : Controller
         ViewBag.FechasDisponibles = fechasDisponibles;
         ViewBag.FechaSeleccionada = fechaSeleccionada;
         ViewBag.TipoSalaSeleccionado = tipoSala;
+        ViewBag.FormatosPorFecha = formatosPorFecha;
+        ViewBag.FormatosDelDia = formatosDelDia;
 
         return View(pelicula);
     }
@@ -95,10 +104,7 @@ public class CarteleraController : Controller
             .OrderBy(a => a.Fila).ThenBy(a => a.Numero)
             .ToListAsync();
 
-        var ocupados = await _db.DetalleVenta
-            .Where(d => d.IdFuncion == idFuncion)
-            .Select(d => d.IdAsiento)
-            .ToListAsync();
+        var ocupados = await DisponibilidadHelper.AsientosOcupados(_db, idFuncion).ToListAsync();
 
         ViewBag.Funcion = funcion;
         ViewBag.Ocupados = ocupados;

@@ -18,9 +18,34 @@ public class HomeController : Controller
             ViewBag.VentasHoy = await _db.Ventas.CountAsync(v => v.Estado == "CONFIRMADA" && v.FechaVenta.Date == DateTime.Today);
             ViewBag.RecaudadoHoy = await _db.Ventas.Where(v => v.Estado == "CONFIRMADA" && v.FechaVenta.Date == DateTime.Today).SumAsync(v => (decimal?)v.Total) ?? 0;
             ViewBag.TotalUsuarios = await _db.Usuarios.CountAsync(u => u.Estado);
+
+            // Peliculas con al menos una funcion vigente, para el carrusel lateral del panel
+            var idsPeliculasEnFuncion = await _db.Funciones
+                .Where(f => f.Fecha >= DateOnly.FromDateTime(DateTime.Today))
+                .Select(f => f.IdPelicula)
+                .Distinct()
+                .ToListAsync();
+
+            ViewBag.PeliculasEnFuncion = await _db.Peliculas
+                .Where(p => idsPeliculasEnFuncion.Contains(p.IdPelicula))
+                .Include(p => p.IdGeneroNavigation)
+                .OrderBy(p => p.Titulo)
+                .ToListAsync();
+
             return View("Dashboard");
         }
 
+        return View(await CargarHomeCliente());
+    }
+
+    // Permite al administrador ver la pagina principal tal como la ve un cliente
+    public async Task<IActionResult> VistaPublica()
+    {
+        return View("Index", await CargarHomeCliente());
+    }
+
+    private async Task<List<Pelicula>> CargarHomeCliente()
+    {
         var estrenos = await _db.Peliculas
             .Include(p => p.IdGeneroNavigation)
             .Where(p => p.Estado)
@@ -41,10 +66,10 @@ public class HomeController : Controller
 
         var idsTop = topPorVentas.Select(x => x.IdPelicula).ToList();
         var topPeliculas = await _db.Peliculas.Where(p => idsTop.Contains(p.IdPelicula)).ToListAsync();
-        var listaTop = idsTop.Select(id => topPeliculas.FirstOrDefault(p => p.IdPelicula == id)).Where(p => p != null) .Select(p => p!).ToList();
+        var listaTop = idsTop.Select(id => topPeliculas.FirstOrDefault(p => p.IdPelicula == id)).Where(p => p != null).Select(p => p!).ToList();
         ViewBag.TopPeliculas = listaTop.Any() ? listaTop : estrenos;
 
-        return View(estrenos);
+        return estrenos;
     }
 
     public IActionResult Error() => View();

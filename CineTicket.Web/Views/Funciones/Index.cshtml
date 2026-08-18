@@ -1,11 +1,43 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
 @model List<Funcione>
 @{
     ViewData["Title"] = "Funciones";
+    int paginaActual = ViewBag.PaginaActual;
+    int totalPaginas = ViewBag.TotalPaginas;
 }
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Funciones</h2>
-    <a asp-action="Create" class="btn btn-primary">+ Nueva función</a>
+    <a asp-action="Create" class="btn btn-primary">+ Programar funciones</a>
 </div>
+
+<form method="get" class="row g-2 align-items-end mb-4">
+    <div class="col-md-3">
+        <label class="form-label">Película</label>
+        <select name="idPelicula" class="form-select" asp-items="@(new SelectList(ViewBag.Peliculas, "IdPelicula", "Titulo", (int?)ViewBag.IdPeliculaSel))">
+            <option value="">Todas</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Sala</label>
+        <select name="idSala" class="form-select" asp-items="@(new SelectList(ViewBag.Salas, "IdSala", "Nombre", (int?)ViewBag.IdSalaSel))">
+            <option value="">Todas</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Fecha</label>
+        <input type="date" name="fecha" value="@ViewBag.FechaSel" class="form-control" />
+    </div>
+    <div class="col-md-2 form-check ms-2 mb-1">
+        <input type="checkbox" name="soloProximas" value="true" class="form-check-input" id="chkProximas" checked="@ViewBag.SoloProximas" />
+        <label class="form-check-label small" for="chkProximas">Solo próximas</label>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+    </div>
+</form>
+
+<p class="poster-meta mb-2">@ViewBag.TotalRegistros función(es) encontradas</p>
+
 <table class="table table-striped">
     <thead><tr><th>Película</th><th>Sala</th><th>Fecha</th><th>Hora</th><th>Precio</th><th></th></tr></thead>
     <tbody>
@@ -28,3 +60,19 @@
     }
     </tbody>
 </table>
+
+@if (totalPaginas > 1)
+{
+    <nav>
+        <ul class="pagination">
+        @for (int i = 1; i <= totalPaginas; i++)
+        {
+            <li class="page-item @(i == paginaActual ? "active" : "")">
+                <a class="page-link" asp-action="Index" asp-route-page="@i"
+                   asp-route-idPelicula="@ViewBag.IdPeliculaSel" asp-route-idSala="@ViewBag.IdSalaSel"
+                   asp-route-fecha="@ViewBag.FechaSel" asp-route-soloProximas="@ViewBag.SoloProximas">@i</a>
+            </li>
+        }
+        </ul>
+    </nav>
+}

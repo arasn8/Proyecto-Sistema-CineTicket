@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace CineTicket.Web.Controllers;
 
 public class CarritoController : Controller
@@ -43,7 +44,7 @@ public class CarritoController : Controller
 
     // ---------- Agregar asientos al carrito ----------
 
-    
+
     [HttpPost]
     public async Task<IActionResult> Agregar(int idFuncion, int idAsiento)
     {
@@ -100,7 +101,7 @@ public class CarritoController : Controller
         if (asiento == null || asiento.IdSala != funcion.IdSala)
             return Json(new { success = false, mensaje = "Asiento no válido para esta función." });
 
-        var yaVendido = await _db.DetalleVenta.AnyAsync(d => d.IdFuncion == idFuncion && d.IdAsiento == idAsiento);
+        var yaVendido = await DisponibilidadHelper.AsientosOcupados(_db, idFuncion).AnyAsync(a => a == idAsiento);
         if (yaVendido) return Json(new { success = false, mensaje = "Ese asiento ya fue vendido." });
 
         var carrito = HttpContext.Session.GetObject<List<CarritoItem>>(SESSION_KEY);
@@ -109,6 +110,8 @@ public class CarritoController : Controller
 
         if (carrito.Count >= MAX_ASIENTOS)
             return Json(new { success = false, mensaje = $"Máximo {MAX_ASIENTOS} asientos por compra." });
+
+
 
         carrito.Add(new CarritoItem
         {
@@ -128,7 +131,7 @@ public class CarritoController : Controller
 
     // ---------- Confirmar compra (con estado Pendiente -Confirmada) ----------
 
-    // Paso 1: crea la venta en estado PENDIENTE y lleva a la pantalla de espera
+
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> Confirmar()
@@ -142,7 +145,7 @@ public class CarritoController : Controller
 
         foreach (var item in carrito)
         {
-            bool vendido = await _db.DetalleVenta.AnyAsync(d => d.IdFuncion == item.IdFuncion && d.IdAsiento == item.IdAsiento);
+            bool vendido = await DisponibilidadHelper.AsientosOcupados(_db, item.IdFuncion).AnyAsync(a => a == item.IdAsiento);
             if (vendido)
             {
                 TempData["Error"] = $"El asiento {item.AsientoNombre} ya no está disponible, elimínalo del carrito.";
@@ -254,5 +257,38 @@ public class CarritoController : Controller
             .Include(v => v.DetalleVenta).ThenInclude(d => d.IdFuncionNavigation).ThenInclude(f => f.IdSalaNavigation)
             .Include(v => v.DetalleVenta).ThenInclude(d => d.IdAsientoNavigation)
             .FirstOrDefaultAsync();
+    }
+
+    [Authorize]
+    [HttpPost]
+    public async Task<IActionResult> CancelarConfirmada(int[] ids)
+    {
+        var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var ventas = await _db.Ventas
+            .Where(v => ids.Contains(v.IdVenta) && v.IdUsuario == idUsuario && v.Estado == "CONFIRMADA")
+            .Include(v => v.DetalleVenta).ThenInclude(d => d.IdFuncionNavigation)
+            .ToListAsync();
+
+        if (!ventas.Any()) return NotFound();
+
+        bool algunaYaPaso = ventas.Any(v => v.DetalleVenta.Any(d =>
+            d.IdFuncionNavigation.Fecha.ToDateTime(d.IdFuncionNavigation.Hora) < DateTime.Now));
+
+        if (algunaYaPaso)
+        {
+            TempData["Error"] = "No se puede cancelar: la función ya pasó.";
+            return RedirectToAction("Index", "MisCompras");
+        }
+
+        foreach (var venta in ventas)
+        {
+            _db.DetalleVenta.RemoveRange(venta.DetalleVenta); // libera los asientos
+            venta.Estado = "CANCELADA"; // conserva el registro de la venta como historial
+        }
+        await _db.SaveChangesAsync();
+
+        TempData["Ok"] = "Compra cancelada. Los asientos quedaron disponibles nuevamente.";
+        return RedirectToAction("Index", "MisCompras");
     }
 }

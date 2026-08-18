@@ -21,6 +21,10 @@ public class GenerosController : Controller
     public async Task<IActionResult> Create(Genero model)
     {
         ModelState.Remove("Peliculas");
+
+        if (await _db.Generos.AnyAsync(g => g.Nombre == model.Nombre))
+            ModelState.AddModelError(nameof(model.Nombre), "Ya existe un género con ese nombre.");
+
         if (!ModelState.IsValid) return View(model);
 
         await _db.Database.ExecuteSqlInterpolatedAsync(
@@ -43,6 +47,10 @@ public class GenerosController : Controller
     {
         if (id != model.IdGenero) return NotFound();
         ModelState.Remove("Peliculas");
+
+        if (await _db.Generos.AnyAsync(g => g.Nombre == model.Nombre && g.IdGenero != id))
+            ModelState.AddModelError(nameof(model.Nombre), "Ya existe un género con ese nombre.");
+
         if (!ModelState.IsValid) return View(model);
 
         await _db.Database.ExecuteSqlInterpolatedAsync(
@@ -72,8 +80,8 @@ public class GenerosController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EliminarAjax(int id)
     {
-    await _db.Database.ExecuteSqlInterpolatedAsync($"EXEC sp_Generos_Eliminar @IdGenero={id}");
-    return Json(new { success = true, mensaje = "Género eliminado." });
+        await _db.Database.ExecuteSqlInterpolatedAsync($"EXEC sp_Generos_Eliminar @IdGenero={id}");
+        return Json(new { success = true, mensaje = "Género eliminado." });
     }
 
 }

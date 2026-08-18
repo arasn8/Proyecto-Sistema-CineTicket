@@ -69,7 +69,7 @@ public class PeliculasController : Controller
         EXEC sp_Peliculas_Actualizar
             @IdPelicula={model.IdPelicula}, @Titulo={model.Titulo}, @Sinopsis={model.Sinopsis},
             @DuracionMin={model.DuracionMin}, @Clasificacion={model.Clasificacion},
-            @IdGenero={model.IdGenero}, @ImagenUrl={model.ImagenUrl}, @Idioma={model.Idioma}");
+            @IdGenero={model.IdGenero}, @ImagenUrl={model.ImagenUrl}, @Idioma={model.Idioma}, @Estado={model.Estado}");
 
         TempData["Ok"] = "Película actualizada correctamente.";
         return RedirectToAction(nameof(Index));
