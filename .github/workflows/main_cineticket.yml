@@ -18,9 +18,9 @@ jobs:
         with:
           dotnet-version: '9.x'
       - name: Build with dotnet
-        run: dotnet build CineTicket.Web.csproj --configuration Release
+        run: dotnet build CineTicket.Web/CineTicket.Web.csproj --configuration Release
       - name: dotnet publish
-        run: dotnet publish CineTicket.Web.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+        run: dotnet publish CineTicket.Web/CineTicket.Web.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
